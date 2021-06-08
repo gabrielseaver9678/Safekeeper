@@ -1,0 +1,12 @@
+cd compiled\classes
+rmdir /s /q safekeeper
+
+cd ..\..
+javac -d compiled safekeeper\Entry.java
+
+Xcopy safekeeper\resources\ compiled\classes\safekeeper\resources\
+
+cd compiled\classes
+jar cfe Safekeeper.jar safekeeper.Entry safekeeper
+
+pause
