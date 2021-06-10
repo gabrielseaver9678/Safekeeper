@@ -10,6 +10,8 @@ import javax.crypto.Cipher;
 import javax.crypto.spec.GCMParameterSpec;
 import javax.crypto.spec.SecretKeySpec;
 
+import safekeeper.Debug;
+
 public class Crypto {
   private static final int secretKeyHashIterations = 1000000;
   
@@ -39,7 +41,7 @@ public class Crypto {
     byte[] arrayOfByte1 = paramString.getBytes(StandardCharsets.UTF_8);
     MessageDigest messageDigest = MessageDigest.getInstance("SHA-256");
     byte[] arrayOfByte2 = new byte[32];
-    for (byte b = 0; b < 1000000; b++) {
+    for (int i = 0; i < 1000000; i++) {
       messageDigest.update(paramArrayOfbyte);
       messageDigest.update(arrayOfByte1);
       messageDigest.update(arrayOfByte2);
@@ -62,19 +64,19 @@ public class Crypto {
       String str1 = Base64.getEncoder().encodeToString(arrayOfByte1);
       String str2 = Base64.getEncoder().encodeToString(arrayOfByte2);
       String str3 = Base64.getEncoder().encodeToString(arrayOfByte);
-      return str1 + " " + str1 + " " + str2;
+      return str1 + " " + str2 + " " + str3;
     } catch (Exception exception) {
       throw new AlgorithmException("Something went wrong in encryption: " + exception.getMessage());
     } 
   }
   
-  public static byte[] decrypt(String paramString1, String paramString2) throws AlgorithmException, IncorrectPasswordException, Exception {
-    String[] arrayOfString = paramString2.split(" ");
+  public static byte[] decrypt(String password, String ciphertext) throws AlgorithmException, IncorrectPasswordException, Exception {
+    String[] arrayOfString = ciphertext.split(" ");
     byte[] arrayOfByte1 = Base64.getDecoder().decode(arrayOfString[0]);
     byte[] arrayOfByte2 = Base64.getDecoder().decode(arrayOfString[1]);
     byte[] arrayOfByte3 = Base64.getDecoder().decode(arrayOfString[2]);
     try {
-      SecretKeySpec secretKeySpec = getSecretKey(arrayOfByte1, paramString1);
+      SecretKeySpec secretKeySpec = getSecretKey(arrayOfByte1, password);
       Cipher cipher = Cipher.getInstance("AES/GCM/NoPadding");
       cipher.init(2, secretKeySpec, new GCMParameterSpec(128, arrayOfByte2));
       return cipher.doFinal(arrayOfByte3);
@@ -85,22 +87,22 @@ public class Crypto {
     } 
   }
   
-  public static String generatePassword(boolean paramBoolean1, boolean paramBoolean2, boolean paramBoolean3, boolean paramBoolean4, int paramInt) {
+  public static String generatePassword(boolean useLower, boolean useUpper, boolean useNums, boolean useSymbols, int length) {
     String str1 = "";
-    if (paramBoolean1)
+    if (useLower)
       str1 = str1 + "abcdefghijklmnopqrstuvwxyz"; 
-    if (paramBoolean2)
+    if (useUpper)
       str1 = str1 + "ABCDEFGHIJKLMNOPQRSTUVWXYZ"; 
-    if (paramBoolean3)
+    if (useNums)
       str1 = str1 + "1234567890"; 
-    if (paramBoolean4)
-      str1 = str1 + "!@#$%&*?^"; 
+    if (useSymbols)
+      str1 = str1 + "!@#$%&*?^";
     if (str1.equals(""))
       return ""; 
     SecureRandom secureRandom = new SecureRandom();
     String str2 = "";
-    for (byte b = 0; b < paramInt; b++)
-      str2 = str2 + str2; 
+    for (byte b = 0; b < length; b++)
+      str2 += str1.charAt((int)(secureRandom.nextDouble()*str1.length()));
     return str2;
   }
   
@@ -112,14 +114,15 @@ public class Crypto {
     return false;
   }
   
-  public static String generatePasswordUseAll(boolean paramBoolean1, boolean paramBoolean2, boolean paramBoolean3, boolean paramBoolean4, int paramInt) {
-    paramInt = Math.max(4, paramInt);
-    String str = generatePassword(paramBoolean1, paramBoolean2, paramBoolean3, paramBoolean4, paramInt);
-    while ((!stringContainsAnyOf(str, "abcdefghijklmnopqrstuvwxyz") && paramBoolean1) || (
-      !stringContainsAnyOf(str, "ABCDEFGHIJKLMNOPQRSTUVWXYZ") && paramBoolean2) || (
-      !stringContainsAnyOf(str, "1234567890") && paramBoolean3) || (
-      !stringContainsAnyOf(str, "!@#$%&*?^") && paramBoolean4))
-      str = generatePassword(paramBoolean1, paramBoolean2, paramBoolean3, paramBoolean4, paramInt); 
+  public static String generatePasswordUseAll(boolean useLower, boolean useUpper, boolean useNums, boolean useSymbols, int length) {
+    length = Math.max(4, length);
+    String str = generatePassword(useLower, useUpper, useNums, useSymbols, length);
+    while ((!stringContainsAnyOf(str, "abcdefghijklmnopqrstuvwxyz") && useLower) || (
+      !stringContainsAnyOf(str, "ABCDEFGHIJKLMNOPQRSTUVWXYZ") && useUpper) || (
+      !stringContainsAnyOf(str, "1234567890") && useNums) || (
+      !stringContainsAnyOf(str, "!@#$%&*?^") && useSymbols)) {
+       str = generatePassword(useLower, useUpper, useNums, useSymbols, length);
+	  }
     return str;
   }
   

@@ -36,10 +36,10 @@ public class SecurePasswordLogin implements ActionListener {
     this.passwordField = new PasswordField(25);
     this.passwordField.addPasswordSubmittedListener(this);
     JLabel jLabel = GUIUtils.makeLabel("Enter your master password:", true);
-    jLabel.setLabelFor((Component)this.passwordField);
+    jLabel.setLabelFor(this.passwordField);
     JPanel jPanel = new JPanel(new FlowLayout(1));
     jPanel.add(jLabel);
-    jPanel.add((Component)this.passwordField);
+    jPanel.add(this.passwordField);
     this.window.add(jPanel);
     this.window.pack();
     this.waitForCorrectPassword.await();

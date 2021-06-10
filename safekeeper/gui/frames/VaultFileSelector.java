@@ -41,21 +41,20 @@ public class VaultFileSelector {
   public static File selectVaultFile(JFrame paramJFrame) {
     JFileChooser jFileChooser = new JFileChooser();
     jFileChooser.setFileFilter(new FileNameExtensionFilter("Safekeeper Vault File (.skvault)", new String[] { "skvault" }));
-    if (jFileChooser.showOpenDialog(paramJFrame) == 0)
-      return jFileChooser.getSelectedFile(); 
+    if (jFileChooser.showOpenDialog(paramJFrame) == JFileChooser.APPROVE_OPTION)
+      return jFileChooser.getSelectedFile();
     return null;
   }
   
   public static File getNewVaultFile(JFrame paramJFrame) {
     JFileChooser jFileChooser = new JFileChooser();
     jFileChooser.setFileFilter(new FileNameExtensionFilter("Safekeeper Vault File (.skvault)", new String[] { "skvault" }));
-    if (jFileChooser.showSaveDialog(paramJFrame) == 0) {
+    if (jFileChooser.showSaveDialog(paramJFrame) == JFileChooser.APPROVE_OPTION) {
       File file = jFileChooser.getSelectedFile();
       if (!file.getName().endsWith(".skvault"))
         return new File(file.getAbsolutePath() + ".skvault"); 
       return file;
-    } 
-    return null;
+    } return null;
   }
   
   private static class ObjectHolder<T> {
@@ -70,8 +69,8 @@ public class VaultFileSelector {
   
   public static String makeNewMasterPassword(final JFrame parentFrame) {
     final CountDownLatch latch = new CountDownLatch(1);
-    final ObjectHolder password = new ObjectHolder(null);
-    JDialog jDialog = GUIUtils.makeNewDialog("Set Master Password", parentFrame, () -> paramCountDownLatch.countDown());
+    final ObjectHolder<String> password = new ObjectHolder<String>(null);
+    JDialog jDialog = GUIUtils.makeNewDialog("Set Master Password", parentFrame, () -> latch.countDown());
     JPanel jPanel1 = new JPanel(new BorderLayout());
     JLabel jLabel = GUIUtils.makeLabel("Your master password will be used to log into your password vault,\nso it is vital that it is very secure. Please use at least 15\ncharacters, including symbols, numbers, and letters. Your master\npassword should not include any words or names. It is recommended\nthat you write it down in a safe location, because if it is lost,\nit will be impossible to open your password vault.", false);
     jLabel.setBorder(GUIUtils.createMarginBorder(10));
@@ -82,10 +81,10 @@ public class VaultFileSelector {
     jPanel2.setBorder(GUIUtils.createMarginBorder(10));
     final PasswordField passwordField = new PasswordField(1);
     matchedPairsLayout.addMatch(
-        GUIUtils.makeLabel("New Master Password", true), (Container)passwordField1);
+        GUIUtils.makeLabel("New Master Password", true), passwordField);
     final PasswordField passwordReentryField = new PasswordField(1);
     matchedPairsLayout.addMatch(
-        GUIUtils.makeLabel("Password Re-Entry", true), (Container)passwordField2);
+        GUIUtils.makeLabel("Password Re-Entry", true), passwordReentryField);
     final Runnable updatePasswordFieldBackground = new Runnable() {
         public void run() {
           boolean bool = VaultFileSelector.checkMasterPasswordValid(passwordField.getPassword(), false);
@@ -94,7 +93,7 @@ public class VaultFileSelector {
           passwordReentryField.setFieldBackground(color);
         }
       };
-    passwordField1.getDocument().addDocumentListener(new DocumentListener() {
+    passwordField.getDocument().addDocumentListener(new DocumentListener() {
           public void insertUpdate(DocumentEvent param1DocumentEvent) {
             updatePasswordFieldBackground.run();
           }
@@ -105,7 +104,7 @@ public class VaultFileSelector {
           
           public void changedUpdate(DocumentEvent param1DocumentEvent) {}
         });
-    runnable.run();
+    updatePasswordFieldBackground.run();
     ActionListener actionListener = new ActionListener() {
         public void actionPerformed(ActionEvent param1ActionEvent) {
           if (passwordField.getPassword().isEmpty() || 
@@ -122,31 +121,32 @@ public class VaultFileSelector {
           int i = GUIUtils.showOptionChooser(parentFrame, "Are you sure you want this to be your master password,\nwhich will be used to access this Safekeeper password\nvault in the future?", "Confirm Master Password", new String[] { "Confirm", "Cancel" }, 0);
           if (i != 0)
             return; 
-          password.object = (T)passwordField.getPassword();
+          password.object = passwordField.getPassword();
           latch.countDown();
         }
       };
-    passwordField1.addPasswordSubmittedListener(actionListener);
-    passwordField2.addPasswordSubmittedListener(actionListener);
+    passwordField.addPasswordSubmittedListener(actionListener);
+    passwordReentryField.addPasswordSubmittedListener(actionListener);
     matchedPairsLayout.addMatch(new JLabel(), 
         
         GUIUtils.makeStretchPanel(GUIUtils.makeButton("Submit", actionListener)));
     matchedPairsLayout.setAutoCreateGaps(true);
     matchedPairsLayout.finalizeLayout();
     jPanel1.add(jPanel2, "Center");
-    ObjectHolder objectHolder2 = new ObjectHolder(null);
-    objectHolder2.object = (T)new PasswordGeneratorPanel(12, 20, paramActionEvent -> {
-          paramPasswordField.setPassword(((PasswordGeneratorPanel)paramObjectHolder.object).getPassword());
-          paramPasswordField.setPasswordIsVisible(true);
+    ObjectHolder<PasswordGeneratorPanel> generatorPanel = new ObjectHolder<PasswordGeneratorPanel>(null);
+    generatorPanel.object = new PasswordGeneratorPanel(12, 20, (e) -> {
+          passwordField.setPassword(generatorPanel.object.getPassword());
+          passwordField.setPasswordIsVisible(true);
         });
-    jPanel1.add(GUIUtils.addMargin((Component)objectHolder2.object, 10), "South");
+    jPanel1.add(GUIUtils.addMargin(generatorPanel.object, 10), "South");
     jDialog.add(jPanel1);
     jDialog.pack();
     try {
-      countDownLatch.await();
+      latch.await();
     } catch (Exception exception) {}
     jDialog.dispose();
-    return (String)objectHolder1.object;
+	
+    return password.object;
   }
   
   private static boolean checkMasterPasswordValid(String paramString, boolean paramBoolean) {

@@ -16,6 +16,7 @@ import javax.swing.JTextField;
 import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
 import javax.swing.text.Document;
+
 import safekeeper.groupings.AccountGroup;
 import safekeeper.gui.components.DragHiddenTextField;
 import safekeeper.gui.components.PasswordField;
@@ -54,15 +55,19 @@ public abstract class AccountWindow extends JDialog {
   
   public AccountWindow(String paramString, MainWindow paramMainWindow, AccountGroup paramAccountGroup, boolean paramBoolean1, boolean paramBoolean2) {
     super(paramMainWindow, paramString);
+	
     this.mainWindow = paramMainWindow;
     this.accountGroup = paramAccountGroup;
     this.editedColor = paramBoolean1 ? Color.YELLOW : Color.WHITE;
     paramMainWindow.accountWindow = this;
+	
     JPanel jPanel = new JPanel(new BorderLayout(10, 10));
     jPanel.setBorder(GUIUtils.createMarginBorder(10));
-    jPanel.add(createAccountPanel(paramBoolean2), "North");
-    jPanel.add((Component)(this.passwordGeneratorPanel = new PasswordGeneratorPanel(8, 20, paramActionEvent -> applyGeneratedPassword())), "Center");
-    jPanel.add(createButtonPanel(), "South");
+	
+    jPanel.add(createAccountPanel(paramBoolean2), BorderLayout.NORTH);
+    jPanel.add(this.passwordGeneratorPanel = new PasswordGeneratorPanel(8, 20, paramActionEvent -> applyGeneratedPassword()), BorderLayout.CENTER);
+    jPanel.add(createButtonPanel(), BorderLayout.SOUTH);
+	
     addEditingListeners();
     add(jPanel);
     pack();

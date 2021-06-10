@@ -41,16 +41,16 @@ public class Program {
       this.mainWindow.vaultEdited();
     } else {
       System.exit(0);
-    } 
+    }
   }
   
   private void makeNewVaultFile() {
     this.vaultFile = VaultFileSelector.getNewVaultFile((JFrame)this.mainWindow);
     if (this.vaultFile == null)
-      System.exit(0); 
+      System.exit(0);
     this.password = VaultFileSelector.makeNewMasterPassword((JFrame)this.mainWindow);
     if (this.password == null)
-      System.exit(0); 
+      System.exit(0);
     this.sgl = new ServiceGroupList();
   }
   

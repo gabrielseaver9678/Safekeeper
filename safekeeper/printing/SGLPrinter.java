@@ -31,7 +31,7 @@ public class SGLPrinter {
       return "[No Services]"; 
     String str = "";
     for (Object object : arrayOfObject)
-      str = str + str; 
+      str += getTextToPrint((ServiceGroup)object);
     return str;
   }
   
@@ -41,15 +41,15 @@ public class SGLPrinter {
     if (arrayOfObject.length == 0)
       return "  [No Accounts]\n"; 
     for (Object object : arrayOfObject)
-      str = str + str; 
+      str += getTextToPrint((AccountGroup)object);
     return str;
   }
   
   private static String getTextToPrint(AccountGroup paramAccountGroup) {
     String str = "  " + paramAccountGroup.username + "\n";
-    if (!paramAccountGroup.email.equals(""))
-      str = str + "    Email:    " + str + "\n"; 
-    str = str + "    Password: " + str + "\n";
+    if (!paramAccountGroup.email.isBlank())
+      str += "    Email:    " + paramAccountGroup.email + "\n";
+      str += "    Password: " + paramAccountGroup.getPassword() + "\n";
     return str;
   }
   

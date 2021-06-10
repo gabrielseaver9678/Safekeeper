@@ -14,6 +14,7 @@ import javax.swing.JSpinner;
 import javax.swing.JTextField;
 import javax.swing.SpinnerNumberModel;
 import javax.swing.event.ChangeEvent;
+
 import safekeeper.crypto.Crypto;
 import safekeeper.gui.layout.RowsLayout;
 import safekeeper.gui.util.GUIUtils;
@@ -35,27 +36,42 @@ public class PasswordGeneratorPanel extends JPanel {
   
   private final JLabel securityLabel;
   
-  public PasswordGeneratorPanel(int paramInt1, int paramInt2, ActionListener paramActionListener) {
-    paramInt1 = Math.max(paramInt1, 4);
-    paramInt2 = Math.min(paramInt2, 24);
+  public PasswordGeneratorPanel(int minLength, int maxLength, ActionListener paramActionListener) {
+    minLength = Math.max(minLength, 4);
+    maxLength = Math.min(maxLength, 24);
+	
     setBorder(BorderFactory.createTitledBorder("Password Generator"));
     RowsLayout rowsLayout = new RowsLayout(this, 10, 10);
     setLayout((LayoutManager)rowsLayout);
+	
+	
     this.lowercase = makeCheckBox("Lowercase");
     this.uppercase = makeCheckBox("Uppercase");
     this.numbers = makeCheckBox("Numbers");
     this.symbols = makeCheckBox("Symbols");
+	
+	
     this.passwordField = new JTextField(30);
     this.passwordField.setFont(GUIUtils.fontPassword);
     this.passwordField.setEditable(false);
+	
+	
     this.generateButton = GUIUtils.makeButton("Generate Password", paramActionEvent -> generatePassword());
-    this.lengthField = new JSpinner(new SpinnerNumberModel(paramInt2, paramInt1, paramInt2, 1));
+	
+	
+    this.lengthField = new JSpinner(new SpinnerNumberModel(maxLength, minLength, maxLength, 1));
     this.lengthField.addChangeListener(paramChangeEvent -> generatePassword());
+	
+	
     this.securityLabel = GUIUtils.makeLabel("", false);
+	
+	
     rowsLayout.addRow(new JComponent[] { this.lowercase, this.uppercase, this.numbers, this.symbols });
     rowsLayout.addRow(new JComponent[] { this.lengthField, this.generateButton });
     rowsLayout.addRow(new JComponent[] { this.passwordField, GUIUtils.makeButton("Apply", paramActionListener) });
     rowsLayout.addRow(new JComponent[] { this.securityLabel });
+	
+	
     generatePassword();
   }
   
@@ -90,7 +106,7 @@ public class PasswordGeneratorPanel extends JPanel {
     if (str.equals("")) {
       GUIUtils.showWarning("Invalid password generation settings.");
       return null;
-    } 
+    }
     this.passwordField.setText(str);
     switch (getPasswordSecurityLevel()) {
       case EXTREMELY_UNSECURE:
@@ -109,7 +125,7 @@ public class PasswordGeneratorPanel extends JPanel {
         this.securityLabel.setForeground(Color.BLACK);
         this.securityLabel.setText("Generated password is very secure");
         break;
-    } 
+    }
     return str;
   }
   
