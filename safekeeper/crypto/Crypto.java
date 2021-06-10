@@ -10,8 +10,6 @@ import javax.crypto.Cipher;
 import javax.crypto.spec.GCMParameterSpec;
 import javax.crypto.spec.SecretKeySpec;
 
-import safekeeper.Debug;
-
 public class Crypto {
   private static final int secretKeyHashIterations = 1000000;
   
