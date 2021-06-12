@@ -45,4 +45,5 @@ public class RowsLayout extends BoxLayout {
 		host.add(rowPanel);
 		addVerticalSpacer();
 	}
+	
 }
