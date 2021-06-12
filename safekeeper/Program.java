@@ -1,3 +1,6 @@
+
+// Entry.java, Gabriel Seaver, 2021
+
 package safekeeper;
 
 import java.io.File;
@@ -6,123 +9,162 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.NoSuchFileException;
 import java.nio.file.Paths;
-import javax.swing.JFrame;
-import safekeeper.crypto.Crypto;
+
+import safekeeper.crypto.Crypto.AlgorithmException;
 import safekeeper.crypto.Crypto.CorruptedVaultException;
+import safekeeper.crypto.Crypto.IncorrectPasswordException;
 import safekeeper.groupings.ServiceGroupList;
+import safekeeper.groupings.ServiceGroupList.CorruptedSerializationException;
 import safekeeper.gui.frames.MainWindow;
 import safekeeper.gui.frames.SecurePasswordLogin;
 import safekeeper.gui.frames.VaultFileSelector;
+import safekeeper.gui.frames.VaultFileSelector.LoadOption;
 import safekeeper.gui.util.GUIUtils;
 
 public class Program {
+	
 	private File vaultFile;
-	
 	private String password;
-	
 	private MainWindow mainWindow;
-	
 	private ServiceGroupList sgl;
 	
-	public Program(String[] paramArrayOfString) {
+	public Program (String[] cmdArgs) {
 		GUIUtils.setWindowsStyle();
-		this.mainWindow = new MainWindow(this::saveSGLSafely);
-		loadAndLogin(paramArrayOfString);
+		mainWindow = new MainWindow(this::saveSGLSafely);
+		loadAndLogin(cmdArgs);
 	}
 	
-	private void loadAndLogin(String[] paramArrayOfString) {
-		VaultFileSelector.LoadOption loadOption = VaultFileSelector.chooseCreateNewOrLoadExisting((JFrame)this.mainWindow);
-		if (loadOption == VaultFileSelector.LoadOption.LOAD_EXISTING) {
-			getVaultFile(paramArrayOfString);
+	// Sets sgl, password, and vaultFile fields
+	private void loadAndLogin (String[] cmdArgs) {
+		
+		// Chooses the load option
+		LoadOption loadOption = VaultFileSelector.chooseCreateNewOrLoadExisting(mainWindow);
+		
+		if (loadOption == LoadOption.LOAD_EXISTING) {
+			
+			// Load an existing vault file
+			getVaultFile(cmdArgs);
 			loadSGLSafely();
-			this.mainWindow.setSGL(this.sgl);
-		} else if (loadOption == VaultFileSelector.LoadOption.CREATE_NEW) {
+			mainWindow.setSGL(sgl);
+			
+		} else if (loadOption == LoadOption.CREATE_NEW) {
+			
+			// Create a new vault file
 			makeNewVaultFile();
-			this.mainWindow.setSGL(this.sgl);
-			this.mainWindow.vaultEdited();
-		} else {
-			System.exit(0);
-		}
+			mainWindow.setSGL(sgl);
+			mainWindow.vaultEdited();
+			
+		} else System.exit(0); // LoadOption.NONE selected
+		
 	}
 	
-	private void makeNewVaultFile() {
-		this.vaultFile = VaultFileSelector.getNewVaultFile((JFrame)this.mainWindow);
-		if (this.vaultFile == null)
-			System.exit(0);
-		this.password = VaultFileSelector.makeNewMasterPassword((JFrame)this.mainWindow);
-		if (this.password == null)
-			System.exit(0);
-		this.sgl = new ServiceGroupList();
+	// Creates a new password vault file
+	private void makeNewVaultFile () {
+		// Get a new vault file
+		vaultFile = VaultFileSelector.getNewVaultFile(mainWindow);
+		
+		// Exit if no vault file was created
+		if (vaultFile == null) System.exit(0);
+		
+		// Make a new master password
+		password = VaultFileSelector.makeNewMasterPassword(mainWindow);
+		
+		// Exit if no master password was set
+		if (password == null) System.exit(0);
+		
+		// New SGL
+		sgl = new ServiceGroupList();
 	}
 	
-	private static void saveServiceGroupList(File paramFile, String paramString, ServiceGroupList paramServiceGroupList) throws IOException, Crypto.AlgorithmException {
-		String str = paramServiceGroupList.getCryptoSerialized(paramString);
-		FileWriter fileWriter = new FileWriter(paramFile);
+	private void saveServiceGroupList () throws IOException, AlgorithmException {
+		
+		// Gets the ciphertext to save and the file writer
+		String ciphertext = sgl.getCryptoSerialized(password);
+		FileWriter fileWriter = new FileWriter(vaultFile);
+		
+		// Attempt to save
 		try {
-			fileWriter.write(str);
+			fileWriter.write(ciphertext);
 		} finally {
 			fileWriter.close();
 		}
 	}
 	
-	private boolean saveSGLSafely() {
+	private boolean saveSGLSafely () {
 		try {
-			saveServiceGroupList(this.vaultFile, this.password, this.sgl);
+			// Attempt to save SGL
+			saveServiceGroupList();
 			return true;
-		} catch (Exception exception) {
-			GUIUtils.showWarning("Failed to save changes to password vault:\n" + exception.toString());
+		} catch (Exception e) {
+			GUIUtils.showWarning("Failed to save changes to password vault:\n" + e.toString());
 			return false;
 		}
 	}
 	
-	private static ServiceGroupList loadServiceGroupList(File paramFile, String paramString) throws Crypto.AlgorithmException, ServiceGroupList.CorruptedSerializationException, Crypto.IncorrectPasswordException, CorruptedVaultException, IOException, NoSuchFileException, Exception {
-		String str = Files.readString(Paths.get(paramFile.getAbsolutePath(), new String[0]));
-		return ServiceGroupList.fromCryptoSerialized(paramString, str);
+	private ServiceGroupList loadServiceGroupList (String submittedPassword)
+			throws	AlgorithmException, CorruptedSerializationException, IncorrectPasswordException, CorruptedVaultException,
+					IOException, NoSuchFileException, Exception {
+		
+		// Decrypt serial info and load SGL
+		String decryptedSerialInfo = Files.readString(Paths.get(vaultFile.getAbsolutePath(), new String[0]));
+		return ServiceGroupList.fromCryptoSerialized(submittedPassword, decryptedSerialInfo);
 	}
 	
-	private void loadSGLSafely() {
+	private void loadSGLSafely () {
+		// Try to login
 		try {
-			this.password = SecurePasswordLogin.login((JFrame)this.mainWindow, paramString -> {
-						try {
-							this.sgl = loadServiceGroupList(this.vaultFile, paramString);
-						} catch (safekeeper.crypto.Crypto.AlgorithmException algorithmException) {
-							GUIUtils.showFatalError((Exception)algorithmException);
-							return false;
-						} catch (NoSuchFileException noSuchFileException) {
-							GUIUtils.showFatalError("The password vault file can no longer be found.\nEnsure that it has not been moved or deleted.");
-							return false;
-						} catch (safekeeper.groupings.ServiceGroupList.CorruptedSerializationException corruptedSerializationException) {
-							GUIUtils.showFatalError((Exception)corruptedSerializationException);
-							return false;
-						} catch (IOException iOException) {
-							GUIUtils.showFatalError(iOException);
-							return false;
-						} catch (safekeeper.crypto.Crypto.IncorrectPasswordException incorrectPasswordException) {
-							return false;
-						} catch (CorruptedVaultException e) {
-							GUIUtils.showFatalError((Exception)e);
-						} catch (Exception exception) {
-							GUIUtils.showFatalError("Something has gone wrong, but we're not sure what.\nIt is likely that the password vault is corrupted.\n" + exception.getMessage());
-							return false;
-						}
-						return true;
-					});
-		} catch (InterruptedException interruptedException) {
-			GUIUtils.showFatalError(interruptedException);
+			password = SecurePasswordLogin.login(mainWindow, submittedPassword -> {
+				// Try to load SGL given a password
+				try {
+					sgl = loadServiceGroupList(submittedPassword);
+				} catch (AlgorithmException e) {
+					GUIUtils.showFatalError(e);
+					return false;
+				} catch (NoSuchFileException e) {
+					GUIUtils.showFatalError(
+						"The password vault file can no longer be found.\n" +
+						"Ensure that it has not been moved or deleted.");
+					return false;
+				} catch (CorruptedSerializationException e) {
+					GUIUtils.showFatalError(e);
+					return false;
+				} catch (IOException e) {
+					GUIUtils.showFatalError(e);
+					return false;
+				} catch (IncorrectPasswordException e) {
+					// Do not show error, just return false because the password is not correct
+					return false;
+				} catch (CorruptedVaultException e) {
+					GUIUtils.showFatalError(e);
+				} catch (Exception e) {
+					GUIUtils.showFatalError(
+						"Something has gone wrong, but we're not sure what.\n" +
+						"It is likely that the password vault is corrupted.\n" +
+						e.getMessage());
+					return false;
+				}
+				return true;
+			});
+		} catch (InterruptedException e) {
+			GUIUtils.showFatalError(e);
 		}
 	}
 	
-	private void getVaultFile(String[] paramArrayOfString) {
-		if (paramArrayOfString.length == 1) {
-			this.vaultFile = new File(paramArrayOfString[1]);
+	private void getVaultFile (String[] cmdArgs) {
+		if (cmdArgs.length == 1) {
+			// Vault file specified in args
+			vaultFile = new File(cmdArgs[1]);
 		} else {
-			this.vaultFile = VaultFileSelector.selectVaultFile((JFrame)this.mainWindow);
-			if (this.vaultFile == null)
-				System.exit(0);
+			// Vault file not specified in args; select a vault file
+			vaultFile = VaultFileSelector.selectVaultFile(mainWindow);
+			
+			// Exit if no vault file was chosen
+			if (vaultFile == null) System.exit(0);
 		}
-		if (this.vaultFile.exists()) {
-			if (!this.vaultFile.getName().endsWith(".skvault"))
-				GUIUtils.showFatalError("The selected file is not an .skvault vault file.");
+		
+		if (vaultFile.exists()) {
+			if (!vaultFile.getName().endsWith("."+VaultFileSelector.EXTENSION))
+				GUIUtils.showFatalError("The selected file is not an ."+VaultFileSelector.EXTENSION+" vault file.");
 		} else {
 			GUIUtils.showFatalError("The selected vault file does not exist.");
 		}

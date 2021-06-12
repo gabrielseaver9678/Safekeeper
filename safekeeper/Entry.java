@@ -1,14 +1,19 @@
+
+// Entry.java, Gabriel Seaver, 2021
+
 package safekeeper;
 
 import safekeeper.gui.util.GUIUtils;
 
 public class Entry {
-	public static void main(String[] paramArrayOfString) {
+	
+	public static void main (String[] args) {
 		try {
-			new Program(paramArrayOfString);
-		} catch (Exception exception) {
-			exception.printStackTrace();
-			GUIUtils.showFatalError(exception);
+			new Program(args);
+		} catch (Exception e) {
+			e.printStackTrace();
+			GUIUtils.showFatalError(e);
 		}
 	}
+	
 }
