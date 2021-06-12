@@ -219,4 +219,5 @@ public class Crypto {
 	public static SecurityLevel getPasswordSecurityLevel (boolean lower, boolean upper, boolean nums, boolean symbols, int length) {
 		return SecurityLevel.getPasswordSecurityLevel(getCombinations(lower, upper, nums, symbols, length));
 	}
+	
 }
