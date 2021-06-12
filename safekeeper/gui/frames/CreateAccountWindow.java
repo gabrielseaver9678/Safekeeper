@@ -1,44 +1,64 @@
+
+// CreateAccountWindow.java, Gabriel Seaver, 2021
+
 package safekeeper.gui.frames;
 
 import java.awt.BorderLayout;
-import java.awt.event.ActionEvent;
+
 import javax.swing.JPanel;
+
 import safekeeper.groupings.AccountGroup;
 import safekeeper.groupings.ServiceGroup;
 import safekeeper.gui.util.GUIUtils;
 
 public class CreateAccountWindow extends AccountWindow {
-	public static CreateAccountWindow newWindow(MainWindow paramMainWindow, ServiceGroup paramServiceGroup) {
-		AccountGroup accountGroup = new AccountGroup(paramServiceGroup);
-		return new CreateAccountWindow("Create New Account (" + paramServiceGroup.name + ")", paramMainWindow, accountGroup);
+	
+	public CreateAccountWindow (MainWindow mainWindow, ServiceGroup service) {
+		super("Create New Account (" + service.name + ")", mainWindow, new AccountGroup(service), false, false);
 	}
 	
-	private CreateAccountWindow(String paramString, MainWindow paramMainWindow, AccountGroup paramAccountGroup) {
-		super(paramString, paramMainWindow, paramAccountGroup, false, false);
+	@Override
+	protected JPanel createButtonPanel () {
+		// Button panel only contains "Save New Account" button
+		JPanel panel = new JPanel(new BorderLayout());
+		panel.add(GUIUtils.makeButton("Save New Account", e -> saveNewAccount()));
+		return panel;
 	}
 	
-	protected JPanel createButtonPanel() {
-		JPanel jPanel = new JPanel(new BorderLayout());
-		jPanel.add(GUIUtils.makeButton("Save New Account", paramActionEvent -> saveNewAccount()));
-		return jPanel;
-	}
-	
-	private void saveNewAccount() {
-		if (validateUsernameAndPassword(this.usernameField.getText(), this.passwordField.getPassword())) {
-			this.accountGroup.username = this.usernameField.getText();
-			this.accountGroup.email = this.emailField.getText();
-			this.accountGroup.setPassword(this.passwordField.getPassword());
-			this.accountGroup.notes = this.notesField.getText();
-			this.accountGroup.service.accountGroups.add(this.accountGroup);
-			closeWindow();
+	private void saveNewAccount () {
+		// Make sure username and password are valid, showing a warning dialog if they are not
+		if (validateUsernameAndPassword(usernameField.getText(), passwordField.getPassword())) {
+			// If they are valid, set the account group values
+			accountGroup.username = usernameField.getText();
+			accountGroup.email = emailField.getText();
+			accountGroup.setPassword(passwordField.getPassword());
+			accountGroup.notes = notesField.getText();
+			
+			// Add the account to the service
+			accountGroup.service.accountGroups.add(accountGroup);
+			
+			// Close the window and indicate that the vault has been edited
 			vaultEdited();
+			closeWindow();
 		}
 	}
 	
-	protected void onClosing() {
-		int i = GUIUtils.showOptionChooser(this, "If you close this window now, the new\naccount will not be saved.", "Close Without Saving Account?", new String[] { "Close Anyways", "Do Not Close" }, 0);
-		if (i != 0)
-			return;
+	@Override
+	protected void onClosing () {
+		// Show "close without saving" chooser
+		int index = GUIUtils.showOptionChooser(
+			this,
+			"If you close this window now, the new\n" +
+			"account will not be saved.",
+			"Close Without Saving Account?",
+			new String[] { "Close Anyways", "Do Not Close" },
+			0);
+		
+		// Do nothing if "Close Anyways" wasn't chosen
+		if (index != 0) return;
+		
+		// Otherwise, close the window
 		closeWindow();
 	}
+	
 }

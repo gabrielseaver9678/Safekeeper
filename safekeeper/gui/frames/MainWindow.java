@@ -244,7 +244,7 @@ public class MainWindow extends JFrame {
 		ServiceGroup serviceGroup = (ServiceGroup)this.createAccountDropdown.getSelectedItem();
 		if (serviceGroup == null)
 			return;
-		CreateAccountWindow.newWindow(this, serviceGroup);
+		new CreateAccountWindow(this, serviceGroup);
 	}
 	
 	private void createService() {

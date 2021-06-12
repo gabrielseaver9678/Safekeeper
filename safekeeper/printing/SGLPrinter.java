@@ -55,7 +55,7 @@ public class SGLPrinter {
 		
 		// No accounts
 		if (accounts.length == 0)
-			return "  [No Accounts]\n";
+			return text + "  [No Accounts]\n";
 		
 		// Loops through accounts
 		for (Object account : accounts)

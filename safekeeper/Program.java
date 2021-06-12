@@ -169,4 +169,5 @@ public class Program {
 			GUIUtils.showFatalError("The selected vault file does not exist.");
 		}
 	}
+	
 }
