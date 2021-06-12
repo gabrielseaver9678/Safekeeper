@@ -9,7 +9,7 @@ import java.util.Set;
 public class Alphabetical {
 	
 	public static interface StringFromObject {
-		abstract String getString (Object param1Object);
+		abstract String getString (Object obj);
 	}
 	
 	public static <T> Object[] orderSetAlphabetically (Set<T> set, StringFromObject objToString) {

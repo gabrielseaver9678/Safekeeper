@@ -64,7 +64,7 @@ public abstract class AccountWindow extends JDialog {
 		// Password generator panel
 		panel.add(
 			passwordGeneratorPanel = new PasswordGeneratorPanel(8, 20,
-				paramActionEvent -> applyGeneratedPassword()),
+				e -> applyGeneratedPassword()),
 			BorderLayout.CENTER);
 		
 		// Group of buttons at the bottom

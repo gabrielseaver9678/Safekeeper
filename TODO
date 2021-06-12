@@ -1,3 +1,4 @@
+Make Crypto use several lines and pass in an OutputStream for decryption and encryption
 Google Drive API with google sign-in for oauth
 Update manager
 Change main password

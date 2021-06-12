@@ -16,8 +16,8 @@ public class AccountGroup implements Serializable {
 	
 	public final ServiceGroup service;
 	
-	public AccountGroup (ServiceGroup paramServiceGroup) {
-		this("", null, "", "", paramServiceGroup);
+	public AccountGroup (ServiceGroup service) {
+		this("", null, "", "", service);
 	}
 	
 	public AccountGroup (String username, String email, String notes, String password, ServiceGroup service) {
