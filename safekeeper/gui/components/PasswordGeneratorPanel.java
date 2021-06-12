@@ -1,9 +1,11 @@
+
+// PasswordGeneratorPanel.java, Gabriel Seaver, 2021
+
 package safekeeper.gui.components;
 
 import java.awt.Color;
-import java.awt.LayoutManager;
-import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+
 import javax.swing.BorderFactory;
 import javax.swing.JButton;
 import javax.swing.JCheckBox;
@@ -13,123 +15,121 @@ import javax.swing.JPanel;
 import javax.swing.JSpinner;
 import javax.swing.JTextField;
 import javax.swing.SpinnerNumberModel;
-import javax.swing.event.ChangeEvent;
 
 import safekeeper.crypto.Crypto;
+import safekeeper.crypto.Crypto.SecurityLevel;
 import safekeeper.gui.layout.RowsLayout;
 import safekeeper.gui.util.GUIUtils;
 
 public class PasswordGeneratorPanel extends JPanel {
-	private final JCheckBox lowercase;
 	
-	private final JCheckBox uppercase;
-	
-	private final JCheckBox numbers;
-	
-	private final JCheckBox symbols;
-	
+	private final JCheckBox lowercase, uppercase, numbers, symbols;
 	private final JTextField passwordField;
-	
 	private final JSpinner lengthField;
-	
 	private final JButton generateButton;
-	
 	private final JLabel securityLabel;
 	
-	public PasswordGeneratorPanel(int minLength, int maxLength, ActionListener paramActionListener) {
+	public PasswordGeneratorPanel (int minLength, int maxLength, ActionListener applyButtonListener) {
+		// Keeps min and max between 4 and 24
 		minLength = Math.max(minLength, 4);
 		maxLength = Math.min(maxLength, 24);
-	
+		
+		// Border and layout
 		setBorder(BorderFactory.createTitledBorder("Password Generator"));
-		RowsLayout rowsLayout = new RowsLayout(this, 10, 10);
-		setLayout((LayoutManager)rowsLayout);
-	
-	
-		this.lowercase = makeCheckBox("Lowercase");
-		this.uppercase = makeCheckBox("Uppercase");
-		this.numbers = makeCheckBox("Numbers");
-		this.symbols = makeCheckBox("Symbols");
-	
-	
-		this.passwordField = new JTextField(30);
-		this.passwordField.setFont(GUIUtils.fontPassword);
-		this.passwordField.setEditable(false);
-	
-	
-		this.generateButton = GUIUtils.makeButton("Generate Password", paramActionEvent -> generatePassword());
-	
-	
-		this.lengthField = new JSpinner(new SpinnerNumberModel(maxLength, minLength, maxLength, 1));
-		this.lengthField.addChangeListener(paramChangeEvent -> generatePassword());
-	
-	
-		this.securityLabel = GUIUtils.makeLabel("", false);
-	
-	
-		rowsLayout.addRow(new JComponent[] { this.lowercase, this.uppercase, this.numbers, this.symbols });
-		rowsLayout.addRow(new JComponent[] { this.lengthField, this.generateButton });
-		rowsLayout.addRow(new JComponent[] { this.passwordField, GUIUtils.makeButton("Apply", paramActionListener) });
-		rowsLayout.addRow(new JComponent[] { this.securityLabel });
-	
-	
+		RowsLayout rowsLayout = new RowsLayout(this, GUIUtils.MARGIN, GUIUtils.MARGIN);
+		setLayout(rowsLayout);
+		
+		// Check boxes
+		lowercase = makeCheckBox("Lowercase");
+		uppercase = makeCheckBox("Uppercase");
+		numbers = makeCheckBox("Numbers");
+		symbols = makeCheckBox("Symbols");
+		
+		// Password field
+		passwordField = new JTextField(30);
+		passwordField.setFont(GUIUtils.fontPassword);
+		passwordField.setEditable(false);
+		
+		// Generate button
+		generateButton = GUIUtils.makeButton("Generate Password", e -> generatePassword());
+		
+		// Length field
+		lengthField = new JSpinner(new SpinnerNumberModel(maxLength, minLength, maxLength, 1));
+		lengthField.addChangeListener(e -> generatePassword());
+		
+		// Security label
+		securityLabel = GUIUtils.makeLabel("", false);
+		
+		// Initialize rows
+		rowsLayout.addRow(new JComponent[] { lowercase, uppercase, numbers, symbols });
+		rowsLayout.addRow(new JComponent[] { lengthField, generateButton });
+		rowsLayout.addRow(new JComponent[] { passwordField, GUIUtils.makeButton("Apply", applyButtonListener) });
+		rowsLayout.addRow(new JComponent[] { securityLabel });
+		
+		// Generates a new password
 		generatePassword();
 	}
 	
-	private JCheckBox makeCheckBox(String paramString) {
-		JCheckBox jCheckBox = new JCheckBox(paramString, true);
-		jCheckBox.setFont(GUIUtils.font);
-		jCheckBox.setFocusPainted(false);
-		jCheckBox.addActionListener(paramActionEvent -> generatePassword());
-		return jCheckBox;
+	private JCheckBox makeCheckBox (String checkBoxText) {
+		JCheckBox checkBox = new JCheckBox(checkBoxText, true);
+		checkBox.setFont(GUIUtils.font);
+		checkBox.setFocusPainted(false);
+		checkBox.addActionListener(e -> generatePassword());
+		return checkBox;
 	}
 	
-	private Crypto.SecurityLevel getPasswordSecurityLevel() {
-		return Crypto.getPasswordSecurityLevel(this.lowercase
-				.isSelected(), this.uppercase
-				.isSelected(), this.numbers
-				.isSelected(), this.symbols
-				.isSelected(), ((Integer)this.lengthField
-				.getValue()).intValue());
+	private SecurityLevel getPasswordSecurityLevel () {
+		return Crypto.getPasswordSecurityLevel(
+			lowercase.isSelected(), 
+			uppercase.isSelected(), 
+			numbers.isSelected(), 
+			symbols.isSelected(),
+			(Integer)lengthField.getValue());
 	}
 	
-	private String getNewPassword() {
-		return Crypto.generatePasswordUseAll(this.lowercase
-				.isSelected(), this.uppercase
-				.isSelected(), this.numbers
-				.isSelected(), this.symbols
-				.isSelected(), ((Integer)this.lengthField
-				.getValue()).intValue());
+	private String getNewPassword () {
+		return Crypto.generatePasswordUseAll(
+			lowercase.isSelected(), 
+			uppercase.isSelected(), 
+			numbers.isSelected(), 
+			symbols.isSelected(),
+			(Integer)lengthField.getValue());
 	}
 	
-	public String generatePassword() {
-		String str = getNewPassword();
-		if (str.equals("")) {
+	private static final Color UNSECURE_COLOR = new Color(180, 0, 0);
+	
+	public String generatePassword () {
+		// Gets a new password
+		String password = getNewPassword();
+		if (password.equals("")) {
 			GUIUtils.showWarning("Invalid password generation settings.");
 			return null;
 		}
-		this.passwordField.setText(str);
+		
+		// Sets the password and the security label
+		passwordField.setText(password);
 		switch (getPasswordSecurityLevel()) {
 			case EXTREMELY_UNSECURE:
-				this.securityLabel.setForeground(new Color(180, 0, 0));
-				this.securityLabel.setText("Warning: Extremely unsecure password");
+				securityLabel.setForeground(UNSECURE_COLOR);
+				securityLabel.setText("Warning: Extremely unsecure password");
 				break;
 			case UNSECURE:
-				this.securityLabel.setForeground(new Color(180, 0, 0));
-				this.securityLabel.setText("Warning: Unsecure password");
+				securityLabel.setForeground(UNSECURE_COLOR);
+				securityLabel.setText("Warning: Unsecure password");
 				break;
 			case SECURE:
-				this.securityLabel.setForeground(Color.BLACK);
-				this.securityLabel.setText("Generated password is secure");
+				securityLabel.setForeground(Color.BLACK);
+				securityLabel.setText("Generated password is secure");
 				break;
 			case VERY_SECURE:
-				this.securityLabel.setForeground(Color.BLACK);
-				this.securityLabel.setText("Generated password is very secure");
+				securityLabel.setForeground(Color.BLACK);
+				securityLabel.setText("Generated password is very secure");
 				break;
-		}
-		return str;
+		} return password;
 	}
 	
-	public String getPassword() {
-		return this.passwordField.getText();
+	public String getPassword () {
+		return passwordField.getText();
 	}
+	
 }

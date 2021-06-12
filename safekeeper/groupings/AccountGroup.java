@@ -1,5 +1,5 @@
 
-// Crypto.java, Gabriel Seaver, 2021
+// AccountGroup.java, Gabriel Seaver, 2021
 
 package safekeeper.groupings;
 
