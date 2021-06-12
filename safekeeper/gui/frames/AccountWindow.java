@@ -86,13 +86,13 @@ public abstract class AccountWindow extends JDialog {
 		panel.setLayout(layout);
 		
 		// Username field and label
-		usernameField = GUIUtils.makeTextField(true, accountGroup.username);
+		usernameField = GUIUtils.makeTextField(accountGroup.username, true);
 		layout.addMatch(
 				GUIUtils.makeLabel("Username", true),
 				usernameField);
 		
 		// Email field and label
-		emailField = GUIUtils.makeTextField(true, accountGroup.email);
+		emailField = GUIUtils.makeTextField(accountGroup.email, true);
 		layout.addMatch(
 				GUIUtils.makeLabel("Email Address", true),
 				emailField);

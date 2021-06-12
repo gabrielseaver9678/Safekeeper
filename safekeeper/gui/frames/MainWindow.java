@@ -157,6 +157,7 @@ public class MainWindow extends JFrame {
 		this.serviceTree.setOpaque(false);
 		this.serviceTree.setToggleClickCount(1);
 		this.serviceTree.addTreeWillExpandListener(new TreeWillExpandListener() {
+			@Override
 					public void treeWillExpand(TreeExpansionEvent param1TreeExpansionEvent) throws ExpandVetoException {
 						DefaultMutableTreeNode defaultMutableTreeNode = (DefaultMutableTreeNode)param1TreeExpansionEvent.getPath().getLastPathComponent();
 						if (defaultMutableTreeNode instanceof MainWindow.ServiceTreeAccountNode) {
@@ -164,7 +165,8 @@ public class MainWindow extends JFrame {
 							throw new ExpandVetoException(param1TreeExpansionEvent, "Account node expansion veto");
 						}
 					}
-					
+			
+			@Override
 					public void treeWillCollapse(TreeExpansionEvent param1TreeExpansionEvent) throws ExpandVetoException {
 						if (((DefaultMutableTreeNode)param1TreeExpansionEvent.getPath().getLastPathComponent()).isRoot())
 							throw new ExpandVetoException(param1TreeExpansionEvent, "Root node cannot collapse");

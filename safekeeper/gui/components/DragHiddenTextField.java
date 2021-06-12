@@ -32,6 +32,7 @@ public class DragHiddenTextField extends JTextField {
 		
 		// Sets the mouse listener
 		addMouseListener(new MouseAdapter() {
+			@Override
 			public void mousePressed (MouseEvent e) {
 				setText(password);
 				selectAll();

@@ -86,6 +86,7 @@ public class VaultFileSelector {
 		matchedPairsLayout.addMatch(
 				GUIUtils.makeLabel("Password Re-Entry", true), passwordReentryField);
 		final Runnable updatePasswordFieldBackground = new Runnable() {
+			@Override
 				public void run() {
 					boolean bool = VaultFileSelector.checkMasterPasswordValid(passwordField.getPassword(), false);
 					Color color = bool ? Color.WHITE : VaultFileSelector.INVALID_MASTER_PASSWORD_COLOR;
@@ -94,18 +95,22 @@ public class VaultFileSelector {
 				}
 			};
 		passwordField.getDocument().addDocumentListener(new DocumentListener() {
+			@Override
 					public void insertUpdate(DocumentEvent param1DocumentEvent) {
 						updatePasswordFieldBackground.run();
 					}
 					
+					@Override
 					public void removeUpdate(DocumentEvent param1DocumentEvent) {
 						updatePasswordFieldBackground.run();
 					}
 					
+					@Override
 					public void changedUpdate(DocumentEvent param1DocumentEvent) {}
 				});
 		updatePasswordFieldBackground.run();
 		ActionListener actionListener = new ActionListener() {
+			@Override
 				public void actionPerformed(ActionEvent param1ActionEvent) {
 					if (passwordField.getPassword().isEmpty() ||
 						!VaultFileSelector.checkMasterPasswordValid(passwordField.getPassword(), true))
