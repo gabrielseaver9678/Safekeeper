@@ -1,5 +1,5 @@
 
-// Entry.java, Gabriel Seaver, 2021
+// Program.java, Gabriel Seaver, 2021
 
 package safekeeper;
 
