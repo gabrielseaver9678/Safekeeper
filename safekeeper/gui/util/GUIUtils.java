@@ -51,7 +51,7 @@ public class GUIUtils {
 		} catch (Exception exception) { }
 	}
 	
-	public static void stylizeWindow (Window window, Window parentWindow) {
+	public static void stylizeWindow (Window window, Window parentWindow, WindowClosingListener closingListener) {
 		// Set not resizeable
 		if (window instanceof Frame) ((Frame)window).setResizable(false);
 		else if (window instanceof Dialog) ((Dialog)window).setResizable(false);
@@ -59,15 +59,7 @@ public class GUIUtils {
 		// Set icon
 		window.setIconImage(lockIcon.getImage());
 		
-		// Set location
-		window.setLocationRelativeTo(parentWindow);
-		
-		// Set visible
-		window.setVisible(true);
-	}
-	
-	public static void stylizeWindow (Window window, Window parentWindow, WindowClosingListener closingListener) {
-		stylizeWindow(window, parentWindow);
+		// Add window closing listener
 		window.addWindowListener(new WindowAdapter() {
 			@Override
 			public void windowClosing (WindowEvent e) {
@@ -79,6 +71,11 @@ public class GUIUtils {
 	@FunctionalInterface
 	public static interface WindowClosingListener {
 		abstract void onWindowClosing();
+	}
+	
+	public static void finalizeWindow (Window window, Window parentWindow) {
+		window.setLocationRelativeTo(parentWindow);
+		window.setVisible(true);
 	}
 	
 	public static JDialog makeNewDialog (String title, Window parentWindow, WindowClosingListener closingListener) {

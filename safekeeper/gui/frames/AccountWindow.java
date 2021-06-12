@@ -49,6 +49,10 @@ public abstract class AccountWindow extends JDialog {
 			boolean showDragAndDrop) {
 		super(mainWindow, title);
 		
+		// Window closing and stylization
+		setDefaultCloseOperation(JFrame.DO_NOTHING_ON_CLOSE);
+		GUIUtils.stylizeWindow(this, mainWindow, this::onClosing);
+		
 		this.mainWindow = mainWindow;
 		accountGroup = account;
 		editedColor = colorEditedFields ? Color.YELLOW : Color.WHITE;
@@ -63,7 +67,7 @@ public abstract class AccountWindow extends JDialog {
 		
 		// Password generator panel
 		panel.add(
-			passwordGeneratorPanel = new PasswordGeneratorPanel(8, 20,
+			passwordGeneratorPanel = new PasswordGeneratorPanel(8, 14,
 				e -> applyGeneratedPassword()),
 			BorderLayout.CENTER);
 		
@@ -75,8 +79,7 @@ public abstract class AccountWindow extends JDialog {
 		// Finalize window
 		add(panel);
 		pack();
-		setDefaultCloseOperation(JFrame.DO_NOTHING_ON_CLOSE);
-		GUIUtils.stylizeWindow(this, mainWindow, this::onClosing);
+		GUIUtils.finalizeWindow(this, mainWindow);
 	}
 	
 	private JPanel createAccountPanel (boolean showDragAndDrop) {
@@ -166,15 +169,15 @@ public abstract class AccountWindow extends JDialog {
 		PasswordField passwordField = new PasswordField(accountGroup.getLastPassword(), 30);
 		passwordField.setEditable(false);
 		layout.addMatch(
-				GUIUtils.makeLabel("Last Password", true),
-				passwordField);
+			GUIUtils.makeLabel("Last Password", true),
+			passwordField);
 		
 		// Last change date viewer and label
 		layout.addMatch(
-				GUIUtils.makeLabel("Last Change", true),
-				GUIUtils.makeLabel(
-					new SimpleDateFormat("MMM d, yyyy (h:mm a)").format(accountGroup.getPasswordLastChangedDate()),
-					true));
+			GUIUtils.makeLabel("Last Change", true),
+			GUIUtils.makeLabel(
+				new SimpleDateFormat("MMM d, yyyy (h:mm a)").format(accountGroup.getPasswordLastChangedDate()),
+				true));
 		
 		// Finalize layout and dialog
 		layout.setAutoCreateGaps(true);
@@ -182,6 +185,7 @@ public abstract class AccountWindow extends JDialog {
 		
 		lastPasswordWindow.add(panel);
 		lastPasswordWindow.pack();
+		GUIUtils.finalizeWindow(lastPasswordWindow, this);
 	}
 	
 	private void addEditingListeners () {

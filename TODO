@@ -1,7 +1,8 @@
 Make Crypto use several lines and pass in an OutputStream for decryption and encryption
+Find a better way to display the information regarding setting a master password
 Google Drive API with google sign-in for oauth
 Update manager
-Change main password
+Way to change main password
 F1 guide
 Complete main window menu bar
 JAR native stuff

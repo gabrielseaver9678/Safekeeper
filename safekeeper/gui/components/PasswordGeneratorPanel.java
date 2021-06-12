@@ -29,10 +29,11 @@ public class PasswordGeneratorPanel extends JPanel {
 	private final JButton generateButton;
 	private final JLabel securityLabel;
 	
-	public PasswordGeneratorPanel (int minLength, int maxLength, ActionListener applyButtonListener) {
-		// Keeps min and max between 4 and 24
+	private static final int MAX_LENGTH = 20;
+	
+	public PasswordGeneratorPanel (int minLength, int defaultLength, ActionListener applyButtonListener) {
+		// Keeps min at 4 or above
 		minLength = Math.max(minLength, 4);
-		maxLength = Math.min(maxLength, 24);
 		
 		// Border and layout
 		setBorder(BorderFactory.createTitledBorder("Password Generator"));
@@ -54,7 +55,7 @@ public class PasswordGeneratorPanel extends JPanel {
 		generateButton = GUIUtils.makeButton("Generate Password", e -> generatePassword());
 		
 		// Length field
-		lengthField = new JSpinner(new SpinnerNumberModel(maxLength, minLength, maxLength, 1));
+		lengthField = new JSpinner(new SpinnerNumberModel(defaultLength, minLength, MAX_LENGTH, 1));
 		lengthField.addChangeListener(e -> generatePassword());
 		
 		// Security label

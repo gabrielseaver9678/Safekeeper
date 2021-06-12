@@ -108,6 +108,10 @@ public class MainWindow extends JFrame {
 	public MainWindow (SaveFunction saveFunction) {
 		super("Safekeeper");
 		
+		// On closing
+		setDefaultCloseOperation(JFrame.DO_NOTHING_ON_CLOSE);
+		GUIUtils.stylizeWindow(this, null, this::onClosing);
+		
 		// Set save function
 		this.saveFunction = saveFunction;
 		
@@ -129,9 +133,7 @@ public class MainWindow extends JFrame {
 		add(serviceScrollPane, BorderLayout.NORTH);
 		add(buttonPanel, BorderLayout.SOUTH);
 		pack();
-		setDefaultCloseOperation(JFrame.DO_NOTHING_ON_CLOSE);
-		
-		GUIUtils.stylizeWindow(this, null, this::onClosing);
+		GUIUtils.finalizeWindow(this, null);
 	}
 	
 	public void setSGL (ServiceGroupList sgl) {
@@ -454,7 +456,7 @@ public class MainWindow extends JFrame {
 		if (!createServiceField.getText().isBlank()) return true;
 		
 		// Otherwise, show a warning
-		GUIUtils.showWarning("The name of the service cannot be blank.");
+		GUIUtils.showWarning("The name of the new service cannot be blank.");
 		return false;
 	}
 	

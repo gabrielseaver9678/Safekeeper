@@ -1,70 +1,94 @@
+
+// SecurePasswordLogin.java, Gabriel Seaver, 2021
+
 package safekeeper.gui.frames;
 
-import java.awt.Component;
-import java.awt.FlowLayout;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
 import java.util.concurrent.CountDownLatch;
+
 import javax.swing.JDialog;
 import javax.swing.JFrame;
-import javax.swing.JLabel;
 import javax.swing.JPanel;
+
 import safekeeper.gui.components.PasswordField;
 import safekeeper.gui.util.GUIUtils;
 
-public class SecurePasswordLogin implements ActionListener {
+public class SecurePasswordLogin {
+	
+	private final CountDownLatch waitForCorrectPassword;
+	private boolean exitIfClosed;
 	private String password;
 	
 	private final JDialog window;
-	
 	private final PasswordField passwordField;
 	
 	private final CheckPasswordFunction checkPassword;
 	
-	private final CountDownLatch waitForCorrectPassword;
-	
-	private boolean shutdownIfClosed;
-	
-	private SecurePasswordLogin(JFrame paramJFrame, CheckPasswordFunction paramCheckPasswordFunction) throws InterruptedException {
-		this.shutdownIfClosed = true;
-		this.checkPassword = paramCheckPasswordFunction;
-		this.waitForCorrectPassword = new CountDownLatch(1);
-		this.window = GUIUtils.makeNewDialog("Safekeeper Login", paramJFrame, () -> {
-					if (this.shutdownIfClosed)
-						System.exit(0);
-				});
-		this.passwordField = new PasswordField(25);
-		this.passwordField.addPasswordSubmittedListener(this);
-		JLabel jLabel = GUIUtils.makeLabel("Enter your master password:", true);
-		jLabel.setLabelFor(this.passwordField);
-		JPanel jPanel = new JPanel(new FlowLayout(1));
-		jPanel.add(jLabel);
-		jPanel.add(this.passwordField);
-		this.window.add(jPanel);
-		this.window.pack();
-		this.waitForCorrectPassword.await();
+	private SecurePasswordLogin (JFrame parentWindow, CheckPasswordFunction checkPasswordFunction) throws InterruptedException {
+		checkPassword = checkPasswordFunction;
+		
+		// Currently, if the window is closed then the program should quit
+		exitIfClosed = true;
+		
+		// Allows for waiting for the correct password
+		waitForCorrectPassword = new CountDownLatch(1);
+		
+		// Make the dialog window
+		window = GUIUtils.makeNewDialog("Safekeeper Login", parentWindow, () -> {
+			if (exitIfClosed) System.exit(0);
+		});
+		
+		// Panel
+		JPanel panel = new JPanel();
+		
+		// Field label
+		panel.add(GUIUtils.makeLabel("Enter your master password:", true));
+		
+		// Password field
+		passwordField = new PasswordField(25);
+		passwordField.addPasswordSubmittedListener(e -> passwordSubmitted());
+		
+		panel.add(passwordField);
+		
+		// Dialog finalization
+		window.add(panel);
+		window.pack();
+		GUIUtils.finalizeWindow(window, parentWindow);
+		
+		// Wait for the correct password
+		waitForCorrectPassword.await();
 	}
 	
-	public void actionPerformed(ActionEvent paramActionEvent) {
-		this.password = this.passwordField.getPassword();
-		this.passwordField.clearPassword();
-		if (this.checkPassword.checkCorrectPassword(this.password)) {
-			this.shutdownIfClosed = false;
-			this.window.dispose();
-			this.waitForCorrectPassword.countDown();
+	private void passwordSubmitted () {
+		// Update password string to hold the submitted password
+		password = passwordField.getPassword();
+		
+		// Clear the password field
+		passwordField.clearPassword();
+		
+		// Check if the password is correct
+		if (checkPassword.checkCorrectPassword(password)) {
+			// Allows the dialog to close without exiting the program
+			exitIfClosed = false;
+			
+			// Close the dialog window
+			window.dispose();
+			
+			// Count down the latch so that the constructor function may now return
+			waitForCorrectPassword.countDown();
 		} else {
-			GUIUtils.playErrorSound();
+			// Show a warning
 			GUIUtils.showWarning("The entered master password was incorrect,\nor the vault file is corrupted.");
 		}
 	}
 	
-	public static String login(JFrame paramJFrame, CheckPasswordFunction paramCheckPasswordFunction) throws InterruptedException {
-		SecurePasswordLogin securePasswordLogin = new SecurePasswordLogin(paramJFrame, paramCheckPasswordFunction);
+	public static String login (JFrame parentFrame, CheckPasswordFunction checkPasswordFunction) throws InterruptedException {
+		SecurePasswordLogin securePasswordLogin = new SecurePasswordLogin(parentFrame, checkPasswordFunction);
 		return securePasswordLogin.password;
 	}
 	
 	@FunctionalInterface
 	public static interface CheckPasswordFunction {
-		boolean checkCorrectPassword(String param1String);
+		abstract boolean checkCorrectPassword (String param1String);
 	}
+	
 }
