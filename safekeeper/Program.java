@@ -8,6 +8,7 @@ import java.nio.file.NoSuchFileException;
 import java.nio.file.Paths;
 import javax.swing.JFrame;
 import safekeeper.crypto.Crypto;
+import safekeeper.crypto.Crypto.CorruptedVaultException;
 import safekeeper.groupings.ServiceGroupList;
 import safekeeper.gui.frames.MainWindow;
 import safekeeper.gui.frames.SecurePasswordLogin;
@@ -74,7 +75,7 @@ public class Program {
 		}
 	}
 	
-	private static ServiceGroupList loadServiceGroupList(File paramFile, String paramString) throws Crypto.AlgorithmException, ServiceGroupList.CorruptedSerializationException, Crypto.IncorrectPasswordException, IOException, NoSuchFileException, Exception {
+	private static ServiceGroupList loadServiceGroupList(File paramFile, String paramString) throws Crypto.AlgorithmException, ServiceGroupList.CorruptedSerializationException, Crypto.IncorrectPasswordException, CorruptedVaultException, IOException, NoSuchFileException, Exception {
 		String str = Files.readString(Paths.get(paramFile.getAbsolutePath(), new String[0]));
 		return ServiceGroupList.fromCryptoSerialized(paramString, str);
 	}
@@ -98,6 +99,8 @@ public class Program {
 							return false;
 						} catch (safekeeper.crypto.Crypto.IncorrectPasswordException incorrectPasswordException) {
 							return false;
+						} catch (CorruptedVaultException e) {
+							GUIUtils.showFatalError((Exception)e);
 						} catch (Exception exception) {
 							GUIUtils.showFatalError("Something has gone wrong, but we're not sure what.\nIt is likely that the password vault is corrupted.\n" + exception.getMessage());
 							return false;

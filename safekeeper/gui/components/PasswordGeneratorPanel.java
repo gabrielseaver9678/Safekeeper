@@ -84,7 +84,7 @@ public class PasswordGeneratorPanel extends JPanel {
 	}
 	
 	private Crypto.SecurityLevel getPasswordSecurityLevel() {
-		return Crypto.getSecurityLevel(this.lowercase
+		return Crypto.getPasswordSecurityLevel(this.lowercase
 				.isSelected(), this.uppercase
 				.isSelected(), this.numbers
 				.isSelected(), this.symbols

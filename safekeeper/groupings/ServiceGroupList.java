@@ -6,8 +6,10 @@ import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.io.Serializable;
+import java.nio.file.NoSuchFileException;
 import java.util.HashSet;
 import safekeeper.crypto.Crypto;
+import safekeeper.crypto.Crypto.CorruptedVaultException;
 
 public class ServiceGroupList implements Serializable {
 	private static final long serialVersionUID = 1L;
@@ -20,7 +22,7 @@ public class ServiceGroupList implements Serializable {
 	
 	public final HashSet<ServiceGroup> serviceGroups = new HashSet<>();
 	
-	public static ServiceGroupList fromCryptoSerialized(String paramString1, String paramString2) throws Crypto.AlgorithmException, CorruptedSerializationException, Crypto.IncorrectPasswordException, IOException, Exception {
+	public static ServiceGroupList fromCryptoSerialized(String paramString1, String paramString2) throws Crypto.AlgorithmException, CorruptedSerializationException, Crypto.IncorrectPasswordException, CorruptedVaultException, IOException, NoSuchFileException, Exception {
 		byte[] arrayOfByte = Crypto.decrypt(paramString1, paramString2);
 		ByteArrayInputStream byteArrayInputStream = new ByteArrayInputStream(arrayOfByte);
 		try {

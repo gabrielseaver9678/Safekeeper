@@ -1,3 +1,6 @@
+
+// Crypto.java, Gabriel Seaver, 2021
+
 package safekeeper.crypto;
 
 import java.nio.charset.StandardCharsets;
@@ -13,7 +16,119 @@ import javax.crypto.spec.SecretKeySpec;
 
 public class Crypto {
 	
+	// Cryptography exceptions
+	public static class AlgorithmException extends Exception {
+		public AlgorithmException (String message) {
+			super(message);
+		}
+	}
+	
+	public static class CorruptedVaultException extends Exception {
+		public CorruptedVaultException () {
+			super("The password vault file is corrupted.");
+		}
+	}
+	
+	public static class IncorrectPasswordException extends Exception {
+		public IncorrectPasswordException (String message) {
+			super(message);
+		}
+	}
+	
+	public static String encodeBase64 (byte[] data) {
+		return Base64.getEncoder().encodeToString(data);
+	}
+	
+	public static byte[] decodeBase64 (String dataBase64) {
+		return Base64.getDecoder().decode(dataBase64);
+	}
+	
+	// Number of SHA-256 iterations to perform
 	private static final int secretKeyHashIterations = 1000000;
+	
+	private static SecretKeySpec getSecretKey (byte[] saltBytes, String password) throws NoSuchAlgorithmException {
+		// Gets byte array from password
+		byte[] passwordBytes = password.getBytes(StandardCharsets.UTF_8);
+		
+		// Gets SHA-256 algorithm and sets up an array for the final output
+		MessageDigest messageDigest = MessageDigest.getInstance("SHA-256");
+		byte[] outputBytes = new byte[32];
+		
+		// Runs through many hash iterations
+		for (int i = 0; i < secretKeyHashIterations; i++) {
+			messageDigest.update(saltBytes);
+			messageDigest.update(passwordBytes);
+			messageDigest.update(outputBytes);
+			outputBytes = messageDigest.digest();
+		}
+		
+		// Returns the new secret key
+		return new SecretKeySpec(outputBytes, "AES");
+	}
+	
+	public static String encrypt (String password, byte[] plaintext) throws AlgorithmException {
+		// Generates random salt bytes
+		SecureRandom secureRandom = new SecureRandom();
+		byte[] saltBytes = new byte[32];
+		secureRandom.nextBytes(saltBytes);
+		
+		// Generates random initialization vector
+		byte[] initVector = new byte[12];
+		secureRandom.nextBytes(initVector);
+		try {
+			// Gets a new secret key using the password and salt bytes
+			SecretKeySpec secretKeySpec = getSecretKey(saltBytes, password);
+			
+			// Uses AES cipher to encrypt the plaintext 
+			Cipher cipher = Cipher.getInstance("AES/GCM/NoPadding");
+			cipher.init(1, secretKeySpec, new GCMParameterSpec(128, initVector));
+			byte[] ciphertext = cipher.doFinal(plaintext);
+			
+			// Generates the three-part ciphertext using the salt bytes, the IV, and the ciphertext
+			String saltString = encodeBase64(saltBytes);
+			String ivString = encodeBase64(initVector);
+			String ciphertextString = encodeBase64(ciphertext);
+			
+			return saltString + " " + ivString + " " + ciphertextString;
+		} catch (Exception e) {
+			throw new AlgorithmException("Something went wrong in encryption: " + e.getMessage());
+		}
+	}
+	
+	public static byte[] decrypt (String password, String threePartCiphertext)
+			throws AlgorithmException, IncorrectPasswordException, CorruptedVaultException, Exception {
+		// Get the parts of the three-part ciphertext
+		String[] splitTPC = threePartCiphertext.split(" ");
+		if (splitTPC.length != 3)
+			throw new CorruptedVaultException();
+		
+		// Get base-64 decoded three part ciphertext
+		byte[] saltBytes, ivBytes, ciphertext;
+		try {
+			saltBytes = decodeBase64(splitTPC[0]);
+			ivBytes = decodeBase64(splitTPC[1]);
+			ciphertext = decodeBase64(splitTPC[2]);
+		} catch (IllegalArgumentException e) {
+			throw new CorruptedVaultException();
+		}
+		
+		// Decrypt and return
+		try {
+			// Gets the secret key
+			SecretKeySpec secretKeySpec = getSecretKey(saltBytes, password);
+			
+			// Decrypts the three-part ciphertext and returns the plaintext
+			Cipher cipher = Cipher.getInstance("AES/GCM/NoPadding");
+			cipher.init(2, secretKeySpec, new GCMParameterSpec(128, ivBytes));
+			return cipher.doFinal(ciphertext);
+		} catch (AEADBadTagException aEADBadTagException) {
+			// Secret key was incorrect; incorrect password
+			throw new IncorrectPasswordException("Incorrect password");
+		} catch (Exception exception) {
+			// Some other problem with the decryption
+			throw new AlgorithmException("Something went wrong in decryption: " + exception.getMessage());
+		}
+	}
 	
 	private static final String
 		lowercaseChars = "abcdefghijklmnopqrstuvwxyz",
@@ -21,138 +136,87 @@ public class Crypto {
 		numberChars = "1234567890",
 		symbolChars = "!@#$%&*?^";
 	
-	private static final double dayCombos = 1_000_000_000. * 60. * 60. * 24.;
-	
-	public static class AlgorithmException extends Exception {
-		public AlgorithmException(String param1String) {
-			super(param1String);
-		}
-	}
-	
-	public static class IncorrectPasswordException extends Exception {
-		public IncorrectPasswordException(String param1String) {
-			super(param1String);
-		}
-	}
-	
-	private static SecretKeySpec getSecretKey(byte[] paramArrayOfbyte, String paramString) throws NoSuchAlgorithmException {
-		byte[] arrayOfByte1 = paramString.getBytes(StandardCharsets.UTF_8);
-		MessageDigest messageDigest = MessageDigest.getInstance("SHA-256");
-		byte[] arrayOfByte2 = new byte[32];
-		for (int i = 0; i < secretKeyHashIterations; i++) {
-			messageDigest.update(paramArrayOfbyte);
-			messageDigest.update(arrayOfByte1);
-			messageDigest.update(arrayOfByte2);
-			arrayOfByte2 = messageDigest.digest();
-		}
-		return new SecretKeySpec(arrayOfByte2, "AES");
-	}
-	
-	public static String encrypt(String paramString, byte[] paramArrayOfbyte) throws AlgorithmException {
-		SecureRandom secureRandom = new SecureRandom();
-		byte[] arrayOfByte1 = new byte[32];
-		secureRandom.nextBytes(arrayOfByte1);
-		byte[] arrayOfByte2 = new byte[12];
-		secureRandom.nextBytes(arrayOfByte2);
-		try {
-			SecretKeySpec secretKeySpec = getSecretKey(arrayOfByte1, paramString);
-			Cipher cipher = Cipher.getInstance("AES/GCM/NoPadding");
-			cipher.init(1, secretKeySpec, new GCMParameterSpec(128, arrayOfByte2));
-			byte[] arrayOfByte = cipher.doFinal(paramArrayOfbyte);
-			String str1 = Base64.getEncoder().encodeToString(arrayOfByte1);
-			String str2 = Base64.getEncoder().encodeToString(arrayOfByte2);
-			String str3 = Base64.getEncoder().encodeToString(arrayOfByte);
-			return str1 + " " + str2 + " " + str3;
-		} catch (Exception exception) {
-			throw new AlgorithmException("Something went wrong in encryption: " + exception.getMessage());
-		}
-	}
-	
-	public static byte[] decrypt(String password, String ciphertext) throws AlgorithmException, IncorrectPasswordException, Exception {
-		String[] arrayOfString = ciphertext.split(" ");
-		byte[] arrayOfByte1 = Base64.getDecoder().decode(arrayOfString[0]);
-		byte[] arrayOfByte2 = Base64.getDecoder().decode(arrayOfString[1]);
-		byte[] arrayOfByte3 = Base64.getDecoder().decode(arrayOfString[2]);
-		try {
-			SecretKeySpec secretKeySpec = getSecretKey(arrayOfByte1, password);
-			Cipher cipher = Cipher.getInstance("AES/GCM/NoPadding");
-			cipher.init(2, secretKeySpec, new GCMParameterSpec(128, arrayOfByte2));
-			return cipher.doFinal(arrayOfByte3);
-		} catch (AEADBadTagException aEADBadTagException) {
-			throw new IncorrectPasswordException("Incorrect password");
-		} catch (Exception exception) {
-			throw new AlgorithmException("Something went wrong in decryption: " + exception.getMessage());
-		}
-	}
-	
-	public static String generatePassword(boolean useLower, boolean useUpper, boolean useNums, boolean useSymbols, int length) {
-		String str1 = "";
+	public static String generatePassword (boolean useLower, boolean useUpper, boolean useNums, boolean useSymbols, int length) {
+		// Gets a string of all usable characters
+		String chars = "";
 		if (useLower)
-			str1 = str1 + "abcdefghijklmnopqrstuvwxyz";
+			chars += lowercaseChars;
 		if (useUpper)
-			str1 = str1 + "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+			chars += uppercaseChars;
 		if (useNums)
-			str1 = str1 + "1234567890";
+			chars += numberChars;
 		if (useSymbols)
-			str1 = str1 + "!@#$%&*?^";
-		if (str1.equals(""))
+			chars += symbolChars;
+		if (chars.equals(""))
 			return "";
+		
+		// Uses a secure random number generator to add random characters to the password
 		SecureRandom secureRandom = new SecureRandom();
-		String str2 = "";
-		for (byte b = 0; b < length; b++)
-			str2 += str1.charAt((int)(secureRandom.nextDouble()*str1.length()));
-		return str2;
+		String password = "";
+		for (byte i = 0; i < length; i++)
+			password += chars.charAt((int)(secureRandom.nextDouble() * chars.length()));
+		return password;
 	}
 	
-	private static boolean stringContainsAnyOf(String paramString1, String paramString2) {
-		for (byte b = 0; b < paramString2.length(); b++) {
-			if (paramString1.contains(paramString2.substring(b, b + 1)))
+	private static boolean stringContainsAnyOf (String string, String substringChars) {
+		// Loops through substring chars to see if any are contained in the string
+		for (byte i = 0; i < substringChars.length(); i++)
+			if (string.contains(substringChars.charAt(i)+""))
 				return true;
-		}
 		return false;
 	}
 	
-	public static String generatePasswordUseAll(boolean useLower, boolean useUpper, boolean useNums, boolean useSymbols, int length) {
+	/**
+	 * Generates a password which is guaranteed to use all given character sets.
+	 */
+	public static String generatePasswordUseAll (boolean useLower, boolean useUpper, boolean useNums, boolean useSymbols, int length) {
 		length = Math.max(4, length);
-		String str = generatePassword(useLower, useUpper, useNums, useSymbols, length);
-		while ((!stringContainsAnyOf(str, "abcdefghijklmnopqrstuvwxyz") && useLower) || (
-			!stringContainsAnyOf(str, "ABCDEFGHIJKLMNOPQRSTUVWXYZ") && useUpper) || (
-			!stringContainsAnyOf(str, "1234567890") && useNums) || (
-			!stringContainsAnyOf(str, "!@#$%&*?^") && useSymbols)) {
-			 str = generatePassword(useLower, useUpper, useNums, useSymbols, length);
-		}
-		return str;
+		
+		// Generates a password
+		String password = generatePassword(useLower, useUpper, useNums, useSymbols, length);
+		
+		// Generate new passwords until it contains at least one character from each set
+		while ((!stringContainsAnyOf(password, lowercaseChars) && useLower) || (
+			!stringContainsAnyOf(password, uppercaseChars) && useUpper) || (
+			!stringContainsAnyOf(password, numberChars) && useNums) || (
+			!stringContainsAnyOf(password, symbolChars) && useSymbols)) {
+			password = generatePassword(useLower, useUpper, useNums, useSymbols, length);
+		} return password;
 	}
 	
-	public static double getCombinations(boolean paramBoolean1, boolean paramBoolean2, boolean paramBoolean3, boolean paramBoolean4, int paramInt) {
-		double d = ((paramBoolean1 ? "abcdefghijklmnopqrstuvwxyz".length() : 0) + (paramBoolean2 ? "ABCDEFGHIJKLMNOPQRSTUVWXYZ".length() : 0) + (paramBoolean3 ? "1234567890".length() : 0) + (paramBoolean4 ? "!@#$%&*?^".length() : 0));
-		return Math.pow(d, paramInt);
+	public static double getCombinations (boolean lower, boolean upper, boolean nums, boolean symbols, int length) {
+		double combinations =
+			((lower ? lowercaseChars.length() : 0) +
+			(upper ? uppercaseChars.length() : 0) +
+			(nums ? numberChars.length() : 0) +
+			(symbols ? symbolChars.length() : 0));
+		return Math.pow(combinations, length);
 	}
 	
+	private static final double dayCombos = 1_000_000_000. * 60. * 60. * 24.;
 	public enum SecurityLevel {
-		EXTREMELY_UNSECURE(1.728E14D),
-		UNSECURE(1.5768E17D),
-		SECURE(9.4608E18D),
-		VERY_SECURE(Double.POSITIVE_INFINITY);
+		EXTREMELY_UNSECURE	(2.*dayCombos),
+		UNSECURE			(5.*365.*dayCombos),
+		SECURE				(300.*365.*dayCombos),
+		VERY_SECURE			(Double.POSITIVE_INFINITY);
 		
 		private final double numCombos;
-		
-		SecurityLevel(double param1Double) {
-			this.numCombos = param1Double;
+		SecurityLevel (double numCombos) {
+			this.numCombos = numCombos;
 		}
 		
-		public static SecurityLevel getSecurityLevel(double param1Double) {
-			if (param1Double <= EXTREMELY_UNSECURE.numCombos)
+		public static SecurityLevel getPasswordSecurityLevel (double combinations) {
+			if (combinations <= EXTREMELY_UNSECURE.numCombos)
 				return EXTREMELY_UNSECURE;
-			if (param1Double <= UNSECURE.numCombos)
+			if (combinations <= UNSECURE.numCombos)
 				return UNSECURE;
-			if (param1Double <= SECURE.numCombos)
+			if (combinations <= SECURE.numCombos)
 				return SECURE;
 			return VERY_SECURE;
 		}
 	}
 	
-	public static SecurityLevel getSecurityLevel(boolean paramBoolean1, boolean paramBoolean2, boolean paramBoolean3, boolean paramBoolean4, int paramInt) {
-		return SecurityLevel.getSecurityLevel(getCombinations(paramBoolean1, paramBoolean2, paramBoolean3, paramBoolean4, paramInt));
+	public static SecurityLevel getPasswordSecurityLevel (boolean lower, boolean upper, boolean nums, boolean symbols, int length) {
+		return SecurityLevel.getPasswordSecurityLevel(getCombinations(lower, upper, nums, symbols, length));
 	}
 }
