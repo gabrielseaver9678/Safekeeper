@@ -193,4 +193,5 @@ public class GUIUtils {
 		panel.setBorder(createMarginBorder(margin));
 		return panel;
 	}
+	
 }

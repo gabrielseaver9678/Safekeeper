@@ -1,10 +1,14 @@
+
+// MainWindow.java, Gabriel Seaver, 2021
+
 package safekeeper.gui.frames;
 
 import java.awt.BorderLayout;
-import java.awt.event.ActionEvent;
+
 import javax.swing.BoxLayout;
 import javax.swing.JButton;
 import javax.swing.JComboBox;
+import javax.swing.JComponent;
 import javax.swing.JFrame;
 import javax.swing.JMenu;
 import javax.swing.JMenuBar;
@@ -19,6 +23,7 @@ import javax.swing.tree.DefaultMutableTreeNode;
 import javax.swing.tree.DefaultTreeCellRenderer;
 import javax.swing.tree.DefaultTreeModel;
 import javax.swing.tree.ExpandVetoException;
+
 import safekeeper.groupings.AccountGroup;
 import safekeeper.groupings.ServiceGroup;
 import safekeeper.groupings.ServiceGroupList;
@@ -26,288 +31,435 @@ import safekeeper.gui.util.GUIUtils;
 import safekeeper.printing.SGLPrinter;
 
 public class MainWindow extends JFrame {
+	
 	AccountWindow accountWindow = null;
 	
 	private ServiceGroupList sgl;
-	
 	private SaveFunction saveFunction;
 	
 	private boolean vaultHasBeenEdited = false;
 	
 	private JPanel buttonPanel;
-	
 	private JTree serviceTree;
 	
-	private JScrollPane serviceScrollPane;
-	
-	private JButton createAccountButton;
-	
-	private JButton createServiceButton;
-	
-	private JButton deleteServiceButton;
-	
-	private JButton printAllButton;
-	
+	private JButton createAccountButton, createServiceButton, deleteServiceButton, printAllButton;
+	private JComboBox<ServiceGroup> createAccountDropdown, deleteServiceDropdown;
 	private JTextField createServiceField;
 	
-	private JComboBox<ServiceGroup> createAccountDropdown;
-	
-	private JComboBox<ServiceGroup> deleteServiceDropdown;
-	
-	public void vaultEdited() {
-		this.vaultHasBeenEdited = true;
+	public void vaultEdited () {
+		vaultHasBeenEdited = true;
 		recreateServiceTree();
 		resetServiceDropdowns();
 	}
 	
 	private class ServiceTreeRootNode extends DefaultMutableTreeNode {
-		private ServiceTreeRootNode(ServiceGroupList param1ServiceGroupList) {
+		
+		private ServiceTreeRootNode (ServiceGroupList sgl) {
 			super("Services");
-			Object[] arrayOfObject = param1ServiceGroupList.getServicesAlphabetical();
-			for (Object object : arrayOfObject)
-				add(new MainWindow.ServiceTreeServiceNode((ServiceGroup)object));
-			if (param1ServiceGroupList.serviceGroups.size() == 0)
-				setAllowsChildren(false);
+			
+			// Gets services in alphabetical order
+			Object[] services = sgl.getServicesAlphabetical();
+			
+			// Adds services to the tree
+			for (Object service : services)
+				add(new MainWindow.ServiceTreeServiceNode((ServiceGroup)service));
+			
+			// If there are no services, do not display the +/- button
+			if (sgl.serviceGroups.size() == 0) setAllowsChildren(false);
 		}
+		
 	}
 	
 	private class ServiceTreeServiceNode extends DefaultMutableTreeNode {
-		private ServiceTreeServiceNode(ServiceGroup param1ServiceGroup) {
-			super(param1ServiceGroup.name);
-			Object[] arrayOfObject = param1ServiceGroup.getAccountsAlphabetical();
-			for (Object object : arrayOfObject)
-				add(new MainWindow.ServiceTreeAccountNode((AccountGroup)object));
-			if (param1ServiceGroup.accountGroups.size() == 0)
-				setAllowsChildren(false);
+		
+		private ServiceTreeServiceNode (ServiceGroup service) {
+			super(service.name);
+			
+			// Gets accounts in alphabetical order
+			Object[] accounts = service.getAccountsAlphabetical();
+			
+			// Adds accounts to the tree
+			for (Object account : accounts)
+				add(new MainWindow.ServiceTreeAccountNode((AccountGroup)account));
+			
+			// If there are no accounts, do not display the +/- button
+			if (service.accountGroups.size() == 0) setAllowsChildren(false);
 		}
+		
 	}
 	
 	private class ServiceTreeAccountNode extends DefaultMutableTreeNode {
-		private AccountGroup account;
 		
-		private ServiceTreeAccountNode(AccountGroup param1AccountGroup) {
-			super(param1AccountGroup.username);
-			this.account = param1AccountGroup;
+		private final AccountGroup account;
+		
+		private ServiceTreeAccountNode (AccountGroup account) {
+			super(account.username);
+			this.account = account;
 		}
 		
-		private void displayAccountWindow() {
-			if (MainWindow.this.accountWindow == null)
-				new DisplayAccountWindow(MainWindow.this, this.account);
+		private void displayAccountWindow () {
+			// If there is not already an account window, display a new one
+			if (accountWindow == null)
+				new DisplayAccountWindow(MainWindow.this, account);
 		}
+		
 	}
 	
-	public MainWindow(SaveFunction paramSaveFunction) {
+	public MainWindow (SaveFunction saveFunction) {
 		super("Safekeeper");
-		this.saveFunction = paramSaveFunction;
-		this.serviceScrollPane = new JScrollPane();
-		this.serviceScrollPane.setBorder(GUIUtils.createMarginBorder(10));
-		this.serviceScrollPane.setVerticalScrollBarPolicy(22);
-		this.serviceScrollPane.setHorizontalScrollBarPolicy(31);
-		GUIUtils.setSize(this.serviceScrollPane, 300, 300);
-		initializeServiceTree();
+		
+		// Set save function
+		this.saveFunction = saveFunction;
+		
+		// Create the scroll pane
+		JScrollPane serviceScrollPane = new JScrollPane();
+		serviceScrollPane.setBorder(GUIUtils.createMarginBorder(GUIUtils.MARGIN));
+		serviceScrollPane.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_ALWAYS);
+		serviceScrollPane.setHorizontalScrollBarPolicy(JScrollPane.HORIZONTAL_SCROLLBAR_NEVER);
+		GUIUtils.setSize(serviceScrollPane, 300, 300);
+		
+		// Initialize the service tree
+		initializeServiceTree(serviceScrollPane);
+		
+		// Create the menu bar and button panel
 		createMenuBar();
 		createButtonPanel();
-		add(this.serviceScrollPane, "North");
-		add(this.buttonPanel, "South");
+		
+		// Add the panels and finalize
+		add(serviceScrollPane, BorderLayout.NORTH);
+		add(buttonPanel, BorderLayout.SOUTH);
 		pack();
-		setDefaultCloseOperation(0);
+		setDefaultCloseOperation(JFrame.DO_NOTHING_ON_CLOSE);
+		
 		GUIUtils.stylizeWindow(this, null, this::onClosing);
 	}
 	
-	public void setSGL(ServiceGroupList paramServiceGroupList) {
-		this.sgl = paramServiceGroupList;
+	public void setSGL (ServiceGroupList sgl) {
+		// Set the SGL
+		this.sgl = sgl;
+		
+		// Enable the buttons, dropdowns, etc.
 		setUIEnabled(true);
+		
+		// Draw a new service tree
 		recreateServiceTree();
+		
+		// Reset dropdowns to contain the most up-to-date services
 		resetServiceDropdowns();
 	}
 	
-	private void recreateServiceTree() {
-		DefaultTreeModel defaultTreeModel = (DefaultTreeModel)this.serviceTree.getModel();
-		((DefaultMutableTreeNode)defaultTreeModel.getRoot()).removeAllChildren();
-		defaultTreeModel.setRoot(new ServiceTreeRootNode(this.sgl));
-		defaultTreeModel.reload();
+	private void recreateServiceTree () {
+		// Get the tree model
+		DefaultTreeModel model = (DefaultTreeModel)serviceTree.getModel();
+		
+		// Remove all children of the root node
+		((DefaultMutableTreeNode)model.getRoot()).removeAllChildren();
+		
+		// Recreate the tree recursively
+		model.setRoot(new ServiceTreeRootNode(sgl));
+		model.reload();
 	}
 	
-	private void resetServiceDropdowns() {
-		this.createAccountDropdown.removeAllItems();
-		this.deleteServiceDropdown.removeAllItems();
-		Object[] arrayOfObject = this.sgl.getServicesAlphabetical();
-		for (byte b = 0; b < arrayOfObject.length; b++) {
-			ServiceGroup serviceGroup = (ServiceGroup)arrayOfObject[b];
-			this.createAccountDropdown.addItem(serviceGroup);
-			this.deleteServiceDropdown.addItem(serviceGroup);
+	private void resetServiceDropdowns () {
+		// Remove all dropdown items
+		createAccountDropdown.removeAllItems();
+		deleteServiceDropdown.removeAllItems();
+		
+		// Get the list of services in alphabetical order
+		Object[] services = sgl.getServicesAlphabetical();
+		
+		// Loop through services, adding them to the dropdowns
+		for (Object service : services) {
+			createAccountDropdown.addItem((ServiceGroup)service);
+			deleteServiceDropdown.addItem((ServiceGroup)service);
 		}
 	}
 	
-	private void setUIEnabled(boolean paramBoolean) {
-		this.createAccountButton.setEnabled(paramBoolean);
-		this.createAccountDropdown.setEnabled(paramBoolean);
-		this.createServiceButton.setEnabled(paramBoolean);
-		this.createServiceField.setEnabled(paramBoolean);
-		this.deleteServiceButton.setEnabled(paramBoolean);
-		this.deleteServiceDropdown.setEnabled(paramBoolean);
-		this.printAllButton.setEnabled(paramBoolean);
+	private void setUIEnabled (boolean enabled) {
+		// Enable all UI elements
+		createAccountButton.setEnabled(enabled);
+		createAccountDropdown.setEnabled(enabled);
+		createServiceButton.setEnabled(enabled);
+		createServiceField.setEnabled(enabled);
+		deleteServiceButton.setEnabled(enabled);
+		deleteServiceDropdown.setEnabled(enabled);
+		printAllButton.setEnabled(enabled);
 	}
 	
-	private void initializeServiceTree() {
-		DefaultTreeModel defaultTreeModel = new DefaultTreeModel(new DefaultMutableTreeNode());
-		defaultTreeModel.setAsksAllowsChildren(true);
-		this.serviceTree = new JTree(defaultTreeModel);
-		this.serviceTree.setFont(GUIUtils.font);
-		this.serviceTree.setOpaque(false);
-		this.serviceTree.setToggleClickCount(1);
-		this.serviceTree.addTreeWillExpandListener(new TreeWillExpandListener() {
-			@Override
-					public void treeWillExpand(TreeExpansionEvent param1TreeExpansionEvent) throws ExpandVetoException {
-						DefaultMutableTreeNode defaultMutableTreeNode = (DefaultMutableTreeNode)param1TreeExpansionEvent.getPath().getLastPathComponent();
-						if (defaultMutableTreeNode instanceof MainWindow.ServiceTreeAccountNode) {
-							((MainWindow.ServiceTreeAccountNode)defaultMutableTreeNode).displayAccountWindow();
-							throw new ExpandVetoException(param1TreeExpansionEvent, "Account node expansion veto");
-						}
-					}
+	private void initializeServiceTree (JScrollPane serviceTreeParentPane) {
+		// Create the tree model
+		DefaultTreeModel model = new DefaultTreeModel(new DefaultMutableTreeNode());
+		
+		// Allows us to capture treeWillExpand for the account nodes to open account windows
+		model.setAsksAllowsChildren(true);
+		
+		// Initialize the tree
+		serviceTree = new JTree(model);
+		serviceTree.setFont(GUIUtils.font);
+		serviceTree.setOpaque(false);
+		serviceTree.setToggleClickCount(1);
+		serviceTree.addTreeWillExpandListener(new TreeWillExpandListener() {
 			
 			@Override
-					public void treeWillCollapse(TreeExpansionEvent param1TreeExpansionEvent) throws ExpandVetoException {
-						if (((DefaultMutableTreeNode)param1TreeExpansionEvent.getPath().getLastPathComponent()).isRoot())
-							throw new ExpandVetoException(param1TreeExpansionEvent, "Root node cannot collapse");
-					}
-				});
-		DefaultTreeCellRenderer defaultTreeCellRenderer = (DefaultTreeCellRenderer)this.serviceTree.getCellRenderer();
-		defaultTreeCellRenderer.setClosedIcon(null);
-		defaultTreeCellRenderer.setOpenIcon(null);
-		defaultTreeCellRenderer.setLeafIcon(null);
-		defaultTreeCellRenderer.setBackgroundNonSelectionColor(getBackground());
-		this.serviceTree.setCellRenderer(defaultTreeCellRenderer);
-		this.serviceScrollPane.setViewportView(this.serviceTree);
+			public void treeWillExpand (TreeExpansionEvent e) throws ExpandVetoException {
+				// Gets the node which is trying to expand
+				DefaultMutableTreeNode node = (DefaultMutableTreeNode)e.getPath().getLastPathComponent();
+				
+				// Check if the node is an account node
+				if (node instanceof ServiceTreeAccountNode) {
+					// Attempt to display a new account window, the user has clicked on the node
+					((ServiceTreeAccountNode)node).displayAccountWindow();
+					
+					// Do not allow the node to try to expand, it will realize it does
+					// not have children
+					throw new ExpandVetoException(e, "Account node expansion veto");
+				}
+			}
+			
+			@Override
+			public void treeWillCollapse (TreeExpansionEvent e) throws ExpandVetoException {
+				// Check if the node is the root node
+				if (((DefaultMutableTreeNode)e.getPath().getLastPathComponent()).isRoot())
+					// If so, do not allow the node to collapse
+					throw new ExpandVetoException(e, "Root node cannot collapse");
+			}
+			
+		});
+		
+		// Modify the tree cell renderer
+		DefaultTreeCellRenderer renderer = (DefaultTreeCellRenderer)serviceTree.getCellRenderer();
+		renderer.setClosedIcon(null);
+		renderer.setOpenIcon(null);
+		renderer.setLeafIcon(null);
+		renderer.setBackgroundNonSelectionColor(getBackground());
+		serviceTree.setCellRenderer(renderer);
+		
+		// Add the service tree to the scroll pane
+		serviceTreeParentPane.setViewportView(serviceTree);
 	}
 	
-	private void onClosing() {
-		if (this.vaultHasBeenEdited) {
-			boolean bool = this.saveFunction.save();
-			if (bool) {
+	private void onClosing () {
+		if (vaultHasBeenEdited) { // If the vault has been edited, save it and show a dialog
+			boolean savedProperly = saveFunction.save();
+			if (savedProperly) {
+				// If it has saved properly, show a dialog to indicate this fact and then exit
 				GUIUtils.showMessage(this, "Changes to your Safekeeper vault have been saved.", "Changes Saved");
 				System.exit(0);
-			}
-		} else {
-			System.exit(0);
-		}
+			} // If it hasn't saved properly, saveFunction.save() will have already shown a warning dialog
+		} else System.exit(0); // Otherwise, exit immediately
 	}
 	
 	private void createMenuBar() {
-		JMenuBar jMenuBar = new JMenuBar();
-		JMenu jMenu1 = new JMenu("Help");
-		jMenuBar.add(jMenu1);
-		jMenu1.add(new JMenuItem("Show User Guide"));
-		JMenu jMenu2 = new JMenu("Edit");
-		jMenuBar.add(jMenu2);
-		setJMenuBar(jMenuBar);
+		// Create the menu bar
+		JMenuBar menuBar = new JMenuBar();
+		
+		// Help menu
+		JMenu helpMenu = new JMenu("Help");
+		menuBar.add(helpMenu);
+		helpMenu.add(new JMenuItem("Show User Guide"));
+		
+		// Edit menu
+		JMenu editMenu = new JMenu("Edit");
+		menuBar.add(editMenu);
+		
+		// Finalize menu bar
+		setJMenuBar(menuBar);
 	}
 	
 	private void createButtonPanel() {
-		this.buttonPanel = new JPanel();
-		this.buttonPanel.setLayout(new BoxLayout(this.buttonPanel, 1));
-		this.buttonPanel.setBorder(GUIUtils.createMarginBorder(10));
-		JPanel jPanel1 = new JPanel(new BorderLayout());
-		this.createAccountButton = GUIUtils.makeButton("Create New Account", paramActionEvent -> createAccount());
-		jPanel1.add(this.createAccountButton, "West");
-		this.createAccountDropdown = new JComboBox<>();
-		this.createAccountDropdown.setFont(GUIUtils.fontButton);
-		jPanel1.add(this.createAccountDropdown, "Center");
-		this.buttonPanel.add(jPanel1);
-		this.buttonPanel.add(GUIUtils.makeVerticalStrut(10));
-		JPanel jPanel2 = new JPanel(new BorderLayout());
-		this.createServiceButton = GUIUtils.makeButton("Create New Service", paramActionEvent -> createService());
-		jPanel2.add(this.createServiceButton, "West");
-		this.createServiceField = GUIUtils.makeTextField(true);
-		this.createServiceField.addActionListener(paramActionEvent -> createService());
-		jPanel2.add(this.createServiceField, "Center");
-		this.buttonPanel.add(jPanel2);
-		this.buttonPanel.add(GUIUtils.makeVerticalStrut(10));
-		JPanel jPanel3 = new JPanel(new BorderLayout());
-		this.deleteServiceButton = GUIUtils.makeButton("Delete Service", paramActionEvent -> deleteService());
-		this.deleteServiceButton.setEnabled(false);
-		jPanel3.add(this.deleteServiceButton, "West");
-		this.deleteServiceDropdown = new JComboBox<>();
-		this.deleteServiceDropdown.setFont(GUIUtils.fontButton);
-		this.deleteServiceDropdown.setEnabled(false);
-		jPanel3.add(this.deleteServiceDropdown, "Center");
-		this.buttonPanel.add(jPanel3);
-		this.buttonPanel.add(GUIUtils.makeVerticalStrut(10));
-		this.printAllButton = GUIUtils.makeButton("Print All Account Information", paramActionEvent -> printAllAccountInfo());
-		this.buttonPanel.add(GUIUtils.makeStretchPanel(this.printAllButton));
+		// Initialize button panel and layout
+		buttonPanel = new JPanel();
+		buttonPanel.setLayout(new BoxLayout(buttonPanel, BoxLayout.Y_AXIS));
+		buttonPanel.setBorder(GUIUtils.createMarginBorder(GUIUtils.MARGIN));
+		
+		// Create account
+		createAccountButton = GUIUtils.makeButton("Create New Account", e -> createAccount());
+		createAccountDropdown = new JComboBox<>();
+		createAccountDropdown.setFont(GUIUtils.fontButton);
+		
+		buttonPanel.add(makeButtonPanelRow(createAccountButton, createAccountDropdown));
+		addButtonPanelStrut();
+		
+		// Create service
+		createServiceButton = GUIUtils.makeButton("Create New Service", e -> createService());
+		createServiceField = GUIUtils.makeTextField(true);
+		createServiceField.addActionListener(e -> createService());
+		
+		buttonPanel.add(makeButtonPanelRow(createServiceButton, createServiceField));
+		addButtonPanelStrut();
+		
+		// Delete service
+		deleteServiceButton = GUIUtils.makeButton("Delete Service", e -> deleteService());
+		deleteServiceDropdown = new JComboBox<>();
+		deleteServiceDropdown.setFont(GUIUtils.fontButton);
+		
+		buttonPanel.add(makeButtonPanelRow(deleteServiceButton, deleteServiceDropdown));
+		addButtonPanelStrut();
+		
+		// Print all
+		printAllButton = GUIUtils.makeButton("Print All Account Information", e -> printAllAccountInfo());
+		buttonPanel.add(GUIUtils.makeStretchPanel(printAllButton));
+		
+		// Disable UI elements
 		setUIEnabled(false);
 	}
 	
-	private void createAccount() {
-		if (this.accountWindow != null) {
+	/**
+	 * Used by createButtonPanel()
+	 */
+	private JPanel makeButtonPanelRow (JComponent leftComponent, JComponent rightComponent) {
+		JPanel panel = new JPanel(new BorderLayout());
+		panel.add(leftComponent, BorderLayout.WEST);
+		panel.add(rightComponent, BorderLayout.CENTER);
+		return panel;
+	}
+	
+	/**
+	 * Used by createButtonPanel()
+	 */
+	private void addButtonPanelStrut () {
+		buttonPanel.add(GUIUtils.makeVerticalStrut(GUIUtils.MARGIN));
+	}
+	
+	/**
+	 * Attempt to make a create new account window
+	 */
+	private void createAccount () {
+		// If there is already an account window open, show a warning and do nothing
+		if (accountWindow != null) {
 			GUIUtils.showWarning("Cannot create a new account while\nediting another.");
 			return;
 		}
-		ServiceGroup serviceGroup = (ServiceGroup)this.createAccountDropdown.getSelectedItem();
-		if (serviceGroup == null)
-			return;
-		new CreateAccountWindow(this, serviceGroup);
+		
+		// Otherwise, get the service
+		ServiceGroup service = (ServiceGroup)createAccountDropdown.getSelectedItem();
+		
+		// If the dropdown had no services, service will be null
+		if (service == null) return;
+		
+		// Create an account window
+		new CreateAccountWindow(this, service);
 	}
 	
-	private void createService() {
-		if (!checkCanEditServices() || !checkCreateServiceNameIsValid())
-			return;
-		int i = GUIUtils.showOptionChooser(this, "Are you sure you want to create a new service?\nServices cannot be renamed once created.\n" + this.createServiceField
-				
-				.getText(), "Create New Service?", new String[] { "Create Service", "Cancel" }, 0);
-		if (i != 0)
-			return;
-		this.sgl.serviceGroups.add(new ServiceGroup(this.createServiceField.getText()));
+	/**
+	 * Attempt to create a new service
+	 */
+	private void createService () {
+		// Finish if either services cannot be edited or if the service name isn't valid
+		if (!checkCanEditServices() || !checkCreateServiceNameIsValid()) return;
+		
+		// Show a "create new service" chooser
+		int index = GUIUtils.showOptionChooser(
+			this,
+			"Are you sure you want to create a new service?\n" +
+			"Services cannot be renamed once created.\n" +
+			createServiceField.getText(),
+			"Create New Service?",
+			new String[] { "Create Service", "Cancel" },
+			0);
+		
+		// If "Create Service" wasn't chosen, finish
+		if (index != 0) return;
+		
+		// Create a new service and add it to the SGL
+		sgl.serviceGroups.add(new ServiceGroup(createServiceField.getText()));
+		
+		// Update the vault edited status
 		vaultEdited();
 	}
 	
-	private void deleteService() {
-		if (!checkCanEditServices())
-			return;
-		ServiceGroup serviceGroup = (ServiceGroup)this.deleteServiceDropdown.getSelectedItem();
-		if (serviceGroup == null)
-			return;
-		if (serviceGroup.accountGroups.size() == 0) {
-			int i = GUIUtils.showOptionChooser(this, "Are you sure you want to delete this service?\n" + serviceGroup.name, "Delete Service", new String[] { "Delete Permanently", "Cancel" }, 0);
-			if (i != 0)
-				return;
+	private void deleteService () {
+		// If services cannot be edited right now, finish
+		if (!checkCanEditServices()) return;
+		
+		// Get the service
+		ServiceGroup service = (ServiceGroup)deleteServiceDropdown.getSelectedItem();
+		
+		// If there are no services in the SGL, service will be null
+		if (service == null) return;
+		
+		// Get the message to display in the chooser and the default index, based on whether or not
+		// the service has one or more connected accounts
+		String message;
+		int defaultIndex;
+		if (service.accountGroups.size() == 0) {
+			// If there are no connected accounts, the default
+			// option is "Delete Permanently" because nothing
+			// too important is connected
+			message =
+				"Are you sure you want to delete this service?\n" +
+				service.name;
+			defaultIndex = 0;
 		} else {
-			int i = GUIUtils.showOptionChooser(this, "Are you sure you want to delete this service, which\nhas " + serviceGroup.accountGroups
-					
-					.size() + " connected account(s)?", "Delete Service", new String[] { "Delete Permanently", "Cancel" }, 1);
-			if (i != 0)
-				return;
+			// If there are 1 or more connected accounts, the
+			// default option is "Cancel" to be extra safe
+			message =
+				"Are you sure you want to delete this service, which\n" +
+				"has " + service.accountGroups.size() + " connected account(s)?\n" +
+				service.name;
+			defaultIndex = 1;
 		}
-		this.sgl.serviceGroups.remove(serviceGroup);
+		
+		// Show the chooser
+		int index = GUIUtils.showOptionChooser(
+			this,
+			message,
+			"Delete Service",
+			new String[] { "Delete Permanently", "Cancel" },
+			defaultIndex);
+		
+		// If "Delete Permanently" was not chosen, finish
+		if (index != 0) return;
+		
+		// Otherwise, remove the service from the SGL
+		sgl.serviceGroups.remove(service);
+		
+		// Update the vault edited status
 		vaultEdited();
 	}
 	
-	private void printAllAccountInfo() {
-		int i = GUIUtils.showOptionChooser(this, "Are you sure you want to print all account information,\nincluding passwords, usernames, and email addresses, for\nfor all accounts in every service?", "Print All Account Info?", new String[] { "Print All Info", "Cancel" }, 1);
-		if (i != 0)
-			return;
+	private void printAllAccountInfo () {
+		// Show the print chooser
+		int index = GUIUtils.showOptionChooser(
+			this,
+			"Are you sure you want to print all account information,\n" +
+			"including passwords, usernames, and email addresses, for\n" +
+			"for all accounts in every service?",
+			"Print All Account Info?",
+			new String[] { "Print All Info", "Cancel" },
+			1);
+		
+		// If "Print All Info" was not selected, finish
+		if (index != 0) return;
+		
+		// Attempt to print the SGL
 		try {
-			SGLPrinter.printSGL(this.sgl);
-		} catch (Exception exception) {
-			GUIUtils.showWarning(exception);
+			SGLPrinter.printSGL(sgl);
+		} catch (Exception e) {
+			GUIUtils.showWarning(e);
 		}
 	}
 	
-	private boolean checkCanEditServices() {
-		if (this.accountWindow == null)
-			return true;
+	private boolean checkCanEditServices () {
+		// If there is no account window, services may be edited
+		if (accountWindow == null) return true;
+		
+		// Otherwise, show a warning
 		GUIUtils.showWarning("You cannot edit services while editing an account.");
 		return false;
 	}
 	
-	private boolean checkCreateServiceNameIsValid() {
-		if (!this.createServiceField.getText().isBlank())
-			return true;
+	private boolean checkCreateServiceNameIsValid () {
+		// If the create service field's value isn't blank, it is valid
+		if (!createServiceField.getText().isBlank()) return true;
+		
+		// Otherwise, show a warning
 		GUIUtils.showWarning("The name of the service cannot be blank.");
 		return false;
 	}
 	
 	public static interface SaveFunction {
-		boolean save();
+		abstract boolean save();
 	}
+	
 }
