@@ -1,6 +1,5 @@
 @echo off
 
-
 rem Removing compiled directory
 echo Removing compiled directory
 rmdir /s compiled\
@@ -11,7 +10,8 @@ echo Recreating compiled directory
 mkdir compiled\
 cd compiled\
 mkdir classes\
-mkdir Safekeeper\
+mkdir Safekeeper_Java\
+mkdir Safekeeper_Windows\
 
 
 rem Java compilation
@@ -21,17 +21,25 @@ cd ..\src\
 cd ..\compiled\
 
 
-rem Copying resources
-echo Copying resources
-xcopy /E ..\src\resources\ Safekeeper\resources\
-
-
 rem Creating jar
 echo Creating jar
 cd classes\
 "C:\Program Files\Java\jdk-11.0.11\bin\jar.exe" cfe Safekeeper.jar safekeeper.Entry safekeeper\
-move Safekeeper.jar ..\Safekeeper\Safekeeper.jar
+move Safekeeper.jar ..\Safekeeper_Java\Safekeeper.jar
 cd ..\
+
+
+rem Copying resources
+echo Copying resources
+xcopy /E ..\src\resources\ Safekeeper_Java\resources\
+xcopy /E ..\src\resources\ Safekeeper_Windows\resources\
+
+
+rem Creating windows executable
+echo Creating windows executable
+cd ..\
+launch4jc launch4j_config.xml
+cd compiled\
 
 
 pause
