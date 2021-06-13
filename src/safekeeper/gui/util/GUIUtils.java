@@ -37,7 +37,7 @@ public class GUIUtils {
 		fontButton = fontPassword,
 		fontPrinter = new Font(Font.MONOSPACED, Font.PLAIN, 14);
 	
-	public static final ImageIcon lockIcon = new ImageIcon("safekeeper/resources/lock-icon.png");
+	public static final ImageIcon lockIcon = new ImageIcon("resources/lock-icon.png");
 	
 	public static final int MARGIN = 10;
 	
