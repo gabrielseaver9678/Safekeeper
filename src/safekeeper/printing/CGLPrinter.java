@@ -1,5 +1,5 @@
 
-// SGLPrinter.java, Gabriel Seaver, 2021
+// CGLPrinter.java, Gabriel Seaver, 2021
 
 package safekeeper.printing;
 
@@ -10,11 +10,11 @@ import java.text.MessageFormat;
 import javax.swing.JTextArea;
 
 import safekeeper.groupings.AccountGroup;
-import safekeeper.groupings.ServiceGroup;
-import safekeeper.groupings.ServiceGroupList;
+import safekeeper.groupings.CategoryGroup;
+import safekeeper.groupings.CategoryGroupList;
 import safekeeper.gui.util.GUIUtils;
 
-public class SGLPrinter {
+public class CGLPrinter {
 	
 	private static boolean print (String text) throws PrinterException {
 		// Makes JTextArea for printing
@@ -35,23 +35,23 @@ public class SGLPrinter {
 		} return false;
 	}
 	
-	private static String getTextToPrint (ServiceGroupList sgl) {
-		Object[] services = sgl.getServicesAlphabetical();
+	private static String getTextToPrint (CategoryGroupList cgl) {
+		Object[] categories = cgl.getCategoriesAlphabetical();
 		
-		// No services
-		if (services.length == 0)
-			return "[No Services]";
+		// No categories
+		if (categories.length == 0)
+			return "[No Categories]";
 		
-		// Loop through services
+		// Loop through categories
 		String text = "";
-		for (Object service : services)
-			text += getTextToPrint((ServiceGroup)service);
+		for (Object category : categories)
+			text += getTextToPrint((CategoryGroup)category);
 		return text;
 	}
 	
-	private static String getTextToPrint (ServiceGroup service) {
-		Object[] accounts = service.getAccountsAlphabetical();
-		String text = service.name + "\n";
+	private static String getTextToPrint (CategoryGroup category) {
+		Object[] accounts = category.getAccountsAlphabetical();
+		String text = category.name + "\n";
 		
 		// No accounts
 		if (accounts.length == 0)
@@ -64,7 +64,7 @@ public class SGLPrinter {
 	}
 	
 	private static String getTextToPrint (AccountGroup account) {
-		String text = "  " + account.username + "\n";
+		String text = "  " + account.getDisplayName() + "\n";
 		// If the email isn't blank, add it as a line
 		if (!account.email.isBlank())
 			text += "    Email:    " + account.email + "\n";
@@ -72,8 +72,8 @@ public class SGLPrinter {
 		return text;
 	}
 	
-	public static boolean printSGL (ServiceGroupList sgl) throws PrinterException {
-		return print(getTextToPrint(sgl));
+	public static boolean printCGL (CategoryGroupList cgl) throws PrinterException {
+		return print(getTextToPrint(cgl));
 	}
 	
 }

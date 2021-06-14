@@ -8,13 +8,13 @@ import java.awt.BorderLayout;
 import javax.swing.JPanel;
 
 import safekeeper.groupings.AccountGroup;
-import safekeeper.groupings.ServiceGroup;
+import safekeeper.groupings.CategoryGroup;
 import safekeeper.gui.util.GUIUtils;
 
 public class CreateAccountWindow extends AccountWindow {
 	
-	public CreateAccountWindow (MainWindow mainWindow, ServiceGroup service) {
-		super("Create New Account (" + service.name + ")", mainWindow, new AccountGroup(service), false, false);
+	public CreateAccountWindow (MainWindow mainWindow, CategoryGroup category) {
+		super("Create New Account (" + category.name + ")", mainWindow, new AccountGroup(category), false, false);
 	}
 	
 	@Override
@@ -27,15 +27,12 @@ public class CreateAccountWindow extends AccountWindow {
 	
 	private void saveNewAccount () {
 		// Make sure username and password are valid, showing a warning dialog if they are not
-		if (validateUsernameAndPassword(usernameField.getText(), passwordField.getPassword())) {
+		if (validateFields()) {
 			// If they are valid, set the account group values
-			accountGroup.username = usernameField.getText();
-			accountGroup.email = emailField.getText();
-			accountGroup.setPassword(passwordField.getPassword());
-			accountGroup.notes = notesField.getText();
+			saveAllFieldDataToAccount();
 			
-			// Add the account to the service
-			accountGroup.service.accountGroups.add(accountGroup);
+			// Add the account to the category
+			accountGroup.category.accountGroups.add(accountGroup);
 			
 			// Close the window and indicate that the vault has been edited
 			vaultEdited();

@@ -13,8 +13,8 @@ import java.nio.file.Paths;
 import safekeeper.crypto.Crypto.AlgorithmException;
 import safekeeper.crypto.Crypto.CorruptedVaultException;
 import safekeeper.crypto.Crypto.IncorrectPasswordException;
-import safekeeper.groupings.ServiceGroupList;
-import safekeeper.groupings.ServiceGroupList.CorruptedSerializationException;
+import safekeeper.groupings.CategoryGroupList;
+import safekeeper.groupings.CategoryGroupList.CorruptedSerializationException;
 import safekeeper.gui.frames.MainWindow;
 import safekeeper.gui.frames.SecurePasswordLogin;
 import safekeeper.gui.frames.VaultFileSelector;
@@ -26,15 +26,15 @@ public class Program {
 	private File vaultFile;
 	private String password;
 	private MainWindow mainWindow;
-	private ServiceGroupList sgl;
+	private CategoryGroupList cgl;
 	
 	public Program (String[] cmdArgs) {
 		GUIUtils.setWindowsStyle();
-		mainWindow = new MainWindow(this::saveSGLSafely);
+		mainWindow = new MainWindow(this::saveCGLSafely);
 		loadAndLogin(cmdArgs);
 	}
 	
-	// Sets sgl, password, and vaultFile fields
+	// Sets cgl, password, and vaultFile fields
 	private void loadAndLogin (String[] cmdArgs) {
 		
 		// Chooses the load option
@@ -44,14 +44,14 @@ public class Program {
 			
 			// Load an existing vault file
 			getVaultFile(cmdArgs);
-			loadSGLSafely();
-			mainWindow.setSGL(sgl);
+			loadCGLSafely();
+			mainWindow.setCGL(cgl);
 			
 		} else if (loadOption == LoadOption.CREATE_NEW) {
 			
 			// Create a new vault file
 			makeNewVaultFile();
-			mainWindow.setSGL(sgl);
+			mainWindow.setCGL(cgl);
 			mainWindow.vaultEdited();
 			
 		} else System.exit(0); // LoadOption.NONE selected
@@ -72,14 +72,14 @@ public class Program {
 		// Exit if no master password was set
 		if (password == null) System.exit(0);
 		
-		// New SGL
-		sgl = new ServiceGroupList();
+		// New CGL
+		cgl = new CategoryGroupList();
 	}
 	
-	private void saveServiceGroupList () throws IOException, AlgorithmException {
+	private void saveCategoryGroupList () throws IOException, AlgorithmException {
 		
 		// Gets the ciphertext to save and the file writer
-		String ciphertext = sgl.getCryptoSerialized(password);
+		String ciphertext = cgl.getCryptoSerialized(password);
 		FileWriter fileWriter = new FileWriter(vaultFile);
 		
 		// Attempt to save
@@ -90,10 +90,10 @@ public class Program {
 		}
 	}
 	
-	private boolean saveSGLSafely () {
+	private boolean saveCGLSafely () {
 		try {
-			// Attempt to save SGL
-			saveServiceGroupList();
+			// Attempt to save CGL
+			saveCategoryGroupList();
 			return true;
 		} catch (Exception e) {
 			GUIUtils.showWarning("Failed to save changes to password vault:\n" + e.toString());
@@ -101,22 +101,22 @@ public class Program {
 		}
 	}
 	
-	private ServiceGroupList loadServiceGroupList (String submittedPassword)
+	private CategoryGroupList loadCategoryGroupList (String submittedPassword)
 			throws	AlgorithmException, CorruptedSerializationException, IncorrectPasswordException, CorruptedVaultException,
 					IOException, NoSuchFileException, Exception {
 		
-		// Decrypt serial info and load SGL
+		// Decrypt serial info and load CGL
 		String decryptedSerialInfo = Files.readString(Paths.get(vaultFile.getAbsolutePath(), new String[0]));
-		return ServiceGroupList.fromCryptoSerialized(submittedPassword, decryptedSerialInfo);
+		return CategoryGroupList.fromCryptoSerialized(submittedPassword, decryptedSerialInfo);
 	}
 	
-	private void loadSGLSafely () {
+	private void loadCGLSafely () {
 		// Try to login
 		try {
 			password = SecurePasswordLogin.login(mainWindow, submittedPassword -> {
-				// Try to load SGL given a password
+				// Try to load CGL given a password
 				try {
-					sgl = loadServiceGroupList(submittedPassword);
+					cgl = loadCategoryGroupList(submittedPassword);
 				} catch (AlgorithmException e) {
 					GUIUtils.showFatalError(e);
 					return false;

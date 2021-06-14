@@ -1,5 +1,5 @@
 
-// ServiceGroupList.java, Gabriel Seaver, 2021
+// categoryGroupList.java, Gabriel Seaver, 2021
 
 package safekeeper.groupings;
 
@@ -17,7 +17,7 @@ import safekeeper.crypto.Crypto.AlgorithmException;
 import safekeeper.crypto.Crypto.CorruptedVaultException;
 import safekeeper.crypto.Crypto.IncorrectPasswordException;
 
-public class ServiceGroupList implements Serializable {
+public class CategoryGroupList implements Serializable {
 	
 	private static final long serialVersionUID = 1L;
 	
@@ -27,9 +27,9 @@ public class ServiceGroupList implements Serializable {
 		}
 	}
 	
-	public final HashSet<ServiceGroup> serviceGroups = new HashSet<>();
+	public final HashSet<CategoryGroup> categoryGroups = new HashSet<>();
 	
-	public static ServiceGroupList fromCryptoSerialized (String password, String threePartCiphertext)
+	public static CategoryGroupList fromCryptoSerialized (String password, String threePartCiphertext)
 			throws	AlgorithmException, CorruptedSerializationException, IncorrectPasswordException, CorruptedVaultException,
 					IOException, NoSuchFileException, Exception {
 		
@@ -37,10 +37,10 @@ public class ServiceGroupList implements Serializable {
 		byte[] plaintext = Crypto.decrypt(password, threePartCiphertext);
 		ByteArrayInputStream byteArrayInputStream = new ByteArrayInputStream(plaintext);
 		
-		// Attempts to deserialize the service group list
+		// Attempts to deserialize the category group list
 		try {
 			ObjectInputStream objInStream = new ObjectInputStream(byteArrayInputStream);
-			return (ServiceGroupList)objInStream.readObject();
+			return (CategoryGroupList)objInStream.readObject();
 		} catch (Exception e) {
 			throw new CorruptedSerializationException("The password vault is corrupted: " + e.getMessage());
 		}
@@ -48,7 +48,7 @@ public class ServiceGroupList implements Serializable {
 	}
 	
 	public String getCryptoSerialized (String password) throws AlgorithmException, IOException {
-		// Writes the sgl to an output stream
+		// Writes the cgl to an output stream
 		ByteArrayOutputStream byteOutStream = new ByteArrayOutputStream();
 		ObjectOutputStream objOutStream = new ObjectOutputStream(byteOutStream);
 		objOutStream.writeObject(this);
@@ -60,8 +60,8 @@ public class ServiceGroupList implements Serializable {
 		return ciphertext;
 	}
 	
-	public Object[] getServicesAlphabetical () {
-		return Alphabetical.orderSetAlphabetically(serviceGroups, service -> ((ServiceGroup)service).name);
+	public Object[] getCategoriesAlphabetical () {
+		return Alphabetical.orderSetAlphabetically(categoryGroups, category -> ((CategoryGroup)category).name);
 	}
 	
 }

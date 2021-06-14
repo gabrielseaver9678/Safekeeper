@@ -25,75 +25,75 @@ import javax.swing.tree.DefaultTreeModel;
 import javax.swing.tree.ExpandVetoException;
 
 import safekeeper.groupings.AccountGroup;
-import safekeeper.groupings.ServiceGroup;
-import safekeeper.groupings.ServiceGroupList;
+import safekeeper.groupings.CategoryGroup;
+import safekeeper.groupings.CategoryGroupList;
 import safekeeper.gui.util.GUIUtils;
-import safekeeper.printing.SGLPrinter;
+import safekeeper.printing.CGLPrinter;
 
 public class MainWindow extends JFrame {
 	
 	AccountWindow accountWindow = null;
 	
-	private ServiceGroupList sgl;
+	private CategoryGroupList cgl;
 	private SaveFunction saveFunction;
 	
 	private boolean vaultHasBeenEdited = false;
 	
 	private JPanel buttonPanel;
-	private JTree serviceTree;
+	private JTree categoryTree;
 	
-	private JButton createAccountButton, createServiceButton, deleteServiceButton, printAllButton;
-	private JComboBox<ServiceGroup> createAccountDropdown, deleteServiceDropdown;
-	private JTextField createServiceField;
+	private JButton createAccountButton, createCategoryButton, deleteCategoryButton, printAllButton;
+	private JComboBox<CategoryGroup> createAccountDropdown, deleteCategoryDropdown;
+	private JTextField createCategoryField;
 	
 	public void vaultEdited () {
 		vaultHasBeenEdited = true;
-		recreateServiceTree();
-		resetServiceDropdowns();
+		recreateCategoryTree();
+		resetCategoryDropdowns();
 	}
 	
-	private class ServiceTreeRootNode extends DefaultMutableTreeNode {
+	private class CategoryTreeRootNode extends DefaultMutableTreeNode {
 		
-		private ServiceTreeRootNode (ServiceGroupList sgl) {
-			super("Services");
+		private CategoryTreeRootNode (CategoryGroupList cgl) {
+			super("Category");
 			
-			// Gets services in alphabetical order
-			Object[] services = sgl.getServicesAlphabetical();
+			// Gets categories in alphabetical order
+			Object[] categories = cgl.getCategoriesAlphabetical();
 			
-			// Adds services to the tree
-			for (Object service : services)
-				add(new MainWindow.ServiceTreeServiceNode((ServiceGroup)service));
+			// Adds categories to the tree
+			for (Object category : categories)
+				add(new MainWindow.CategoryTreeCategoryNode((CategoryGroup)category));
 			
-			// If there are no services, do not display the +/- button
-			if (sgl.serviceGroups.size() == 0) setAllowsChildren(false);
+			// If there are no categories, do not display the +/- button
+			if (cgl.categoryGroups.size() == 0) setAllowsChildren(false);
 		}
 		
 	}
 	
-	private class ServiceTreeServiceNode extends DefaultMutableTreeNode {
+	private class CategoryTreeCategoryNode extends DefaultMutableTreeNode {
 		
-		private ServiceTreeServiceNode (ServiceGroup service) {
-			super(service.name);
+		private CategoryTreeCategoryNode (CategoryGroup category) {
+			super(category.name);
 			
 			// Gets accounts in alphabetical order
-			Object[] accounts = service.getAccountsAlphabetical();
+			Object[] accounts = category.getAccountsAlphabetical();
 			
 			// Adds accounts to the tree
 			for (Object account : accounts)
-				add(new MainWindow.ServiceTreeAccountNode((AccountGroup)account));
+				add(new MainWindow.CategoryTreeAccountNode((AccountGroup)account));
 			
 			// If there are no accounts, do not display the +/- button
-			if (service.accountGroups.size() == 0) setAllowsChildren(false);
+			if (category.accountGroups.size() == 0) setAllowsChildren(false);
 		}
 		
 	}
 	
-	private class ServiceTreeAccountNode extends DefaultMutableTreeNode {
+	private class CategoryTreeAccountNode extends DefaultMutableTreeNode {
 		
 		private final AccountGroup account;
 		
-		private ServiceTreeAccountNode (AccountGroup account) {
-			super(account.username);
+		private CategoryTreeAccountNode (AccountGroup account) {
+			super(account.getDisplayName());
 			this.account = account;
 		}
 		
@@ -116,64 +116,64 @@ public class MainWindow extends JFrame {
 		this.saveFunction = saveFunction;
 		
 		// Create the scroll pane
-		JScrollPane serviceScrollPane = new JScrollPane();
-		serviceScrollPane.setBorder(GUIUtils.createMarginBorder(GUIUtils.MARGIN));
-		serviceScrollPane.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_ALWAYS);
-		serviceScrollPane.setHorizontalScrollBarPolicy(JScrollPane.HORIZONTAL_SCROLLBAR_NEVER);
-		GUIUtils.setSize(serviceScrollPane, 300, 300);
+		JScrollPane categoryScrollPane = new JScrollPane();
+		categoryScrollPane.setBorder(GUIUtils.createMarginBorder(GUIUtils.MARGIN));
+		categoryScrollPane.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_ALWAYS);
+		categoryScrollPane.setHorizontalScrollBarPolicy(JScrollPane.HORIZONTAL_SCROLLBAR_NEVER);
+		GUIUtils.setSize(categoryScrollPane, 300, 300);
 		
-		// Initialize the service tree
-		initializeServiceTree(serviceScrollPane);
+		// Initialize the category tree
+		initializeCategoryTree(categoryScrollPane);
 		
 		// Create the menu bar and button panel
 		createMenuBar();
 		createButtonPanel();
 		
 		// Add the panels and finalize
-		add(serviceScrollPane, BorderLayout.NORTH);
+		add(categoryScrollPane, BorderLayout.NORTH);
 		add(buttonPanel, BorderLayout.SOUTH);
 		pack();
 		GUIUtils.finalizeWindow(this, null);
 	}
 	
-	public void setSGL (ServiceGroupList sgl) {
-		// Set the SGL
-		this.sgl = sgl;
+	public void setCGL (CategoryGroupList cgl) {
+		// Set the CGL
+		this.cgl = cgl;
 		
 		// Enable the buttons, dropdowns, etc.
 		setUIEnabled(true);
 		
-		// Draw a new service tree
-		recreateServiceTree();
+		// Draw a new category tree
+		recreateCategoryTree();
 		
-		// Reset dropdowns to contain the most up-to-date services
-		resetServiceDropdowns();
+		// Reset dropdowns to contain the most up-to-date categories
+		resetCategoryDropdowns();
 	}
 	
-	private void recreateServiceTree () {
+	private void recreateCategoryTree () {
 		// Get the tree model
-		DefaultTreeModel model = (DefaultTreeModel)serviceTree.getModel();
+		DefaultTreeModel model = (DefaultTreeModel)categoryTree.getModel();
 		
 		// Remove all children of the root node
 		((DefaultMutableTreeNode)model.getRoot()).removeAllChildren();
 		
 		// Recreate the tree recursively
-		model.setRoot(new ServiceTreeRootNode(sgl));
+		model.setRoot(new CategoryTreeRootNode(cgl));
 		model.reload();
 	}
 	
-	private void resetServiceDropdowns () {
+	private void resetCategoryDropdowns () {
 		// Remove all dropdown items
 		createAccountDropdown.removeAllItems();
-		deleteServiceDropdown.removeAllItems();
+		deleteCategoryDropdown.removeAllItems();
 		
-		// Get the list of services in alphabetical order
-		Object[] services = sgl.getServicesAlphabetical();
+		// Get the list of categories in alphabetical order
+		Object[] categories = cgl.getCategoriesAlphabetical();
 		
-		// Loop through services, adding them to the dropdowns
-		for (Object service : services) {
-			createAccountDropdown.addItem((ServiceGroup)service);
-			deleteServiceDropdown.addItem((ServiceGroup)service);
+		// Loop through categories, adding them to the dropdowns
+		for (Object category : categories) {
+			createAccountDropdown.addItem((CategoryGroup)category);
+			deleteCategoryDropdown.addItem((CategoryGroup)category);
 		}
 	}
 	
@@ -181,14 +181,14 @@ public class MainWindow extends JFrame {
 		// Enable all UI elements
 		createAccountButton.setEnabled(enabled);
 		createAccountDropdown.setEnabled(enabled);
-		createServiceButton.setEnabled(enabled);
-		createServiceField.setEnabled(enabled);
-		deleteServiceButton.setEnabled(enabled);
-		deleteServiceDropdown.setEnabled(enabled);
+		createCategoryButton.setEnabled(enabled);
+		createCategoryField.setEnabled(enabled);
+		deleteCategoryButton.setEnabled(enabled);
+		deleteCategoryDropdown.setEnabled(enabled);
 		printAllButton.setEnabled(enabled);
 	}
 	
-	private void initializeServiceTree (JScrollPane serviceTreeParentPane) {
+	private void initializeCategoryTree (JScrollPane categoryTreeParentPane) {
 		// Create the tree model
 		DefaultTreeModel model = new DefaultTreeModel(new DefaultMutableTreeNode());
 		
@@ -196,11 +196,11 @@ public class MainWindow extends JFrame {
 		model.setAsksAllowsChildren(true);
 		
 		// Initialize the tree
-		serviceTree = new JTree(model);
-		serviceTree.setFont(GUIUtils.font);
-		serviceTree.setOpaque(false);
-		serviceTree.setToggleClickCount(1);
-		serviceTree.addTreeWillExpandListener(new TreeWillExpandListener() {
+		categoryTree = new JTree(model);
+		categoryTree.setFont(GUIUtils.font);
+		categoryTree.setOpaque(false);
+		categoryTree.setToggleClickCount(1);
+		categoryTree.addTreeWillExpandListener(new TreeWillExpandListener() {
 			
 			@Override
 			public void treeWillExpand (TreeExpansionEvent e) throws ExpandVetoException {
@@ -208,9 +208,9 @@ public class MainWindow extends JFrame {
 				DefaultMutableTreeNode node = (DefaultMutableTreeNode)e.getPath().getLastPathComponent();
 				
 				// Check if the node is an account node
-				if (node instanceof ServiceTreeAccountNode) {
+				if (node instanceof CategoryTreeAccountNode) {
 					// Attempt to display a new account window, the user has clicked on the node
-					((ServiceTreeAccountNode)node).displayAccountWindow();
+					((CategoryTreeAccountNode)node).displayAccountWindow();
 					
 					// Do not allow the node to try to expand, it will realize it does
 					// not have children
@@ -229,15 +229,15 @@ public class MainWindow extends JFrame {
 		});
 		
 		// Modify the tree cell renderer
-		DefaultTreeCellRenderer renderer = (DefaultTreeCellRenderer)serviceTree.getCellRenderer();
+		DefaultTreeCellRenderer renderer = (DefaultTreeCellRenderer)categoryTree.getCellRenderer();
 		renderer.setClosedIcon(null);
 		renderer.setOpenIcon(null);
 		renderer.setLeafIcon(null);
 		renderer.setBackgroundNonSelectionColor(getBackground());
-		serviceTree.setCellRenderer(renderer);
+		categoryTree.setCellRenderer(renderer);
 		
-		// Add the service tree to the scroll pane
-		serviceTreeParentPane.setViewportView(serviceTree);
+		// Add the category tree to the scroll pane
+		categoryTreeParentPane.setViewportView(categoryTree);
 	}
 	
 	private void onClosing () {
@@ -282,20 +282,20 @@ public class MainWindow extends JFrame {
 		buttonPanel.add(makeButtonPanelRow(createAccountButton, createAccountDropdown));
 		addButtonPanelStrut();
 		
-		// Create service
-		createServiceButton = GUIUtils.makeButton("Create New Service", e -> createService());
-		createServiceField = GUIUtils.makeTextField(true);
-		createServiceField.addActionListener(e -> createService());
+		// Create category
+		createCategoryButton = GUIUtils.makeButton("Create New Category", e -> createCategory());
+		createCategoryField = GUIUtils.makeTextField(true);
+		createCategoryField.addActionListener(e -> createCategory());
 		
-		buttonPanel.add(makeButtonPanelRow(createServiceButton, createServiceField));
+		buttonPanel.add(makeButtonPanelRow(createCategoryButton, createCategoryField));
 		addButtonPanelStrut();
 		
-		// Delete service
-		deleteServiceButton = GUIUtils.makeButton("Delete Service", e -> deleteService());
-		deleteServiceDropdown = new JComboBox<>();
-		deleteServiceDropdown.setFont(GUIUtils.fontButton);
+		// Delete category
+		deleteCategoryButton = GUIUtils.makeButton("Delete Category", e -> deleteCategory());
+		deleteCategoryDropdown = new JComboBox<>();
+		deleteCategoryDropdown.setFont(GUIUtils.fontButton);
 		
-		buttonPanel.add(makeButtonPanelRow(deleteServiceButton, deleteServiceDropdown));
+		buttonPanel.add(makeButtonPanelRow(deleteCategoryButton, deleteCategoryDropdown));
 		addButtonPanelStrut();
 		
 		// Print all
@@ -333,72 +333,72 @@ public class MainWindow extends JFrame {
 			return;
 		}
 		
-		// Otherwise, get the service
-		ServiceGroup service = (ServiceGroup)createAccountDropdown.getSelectedItem();
+		// Otherwise, get the category
+		CategoryGroup category = (CategoryGroup)createAccountDropdown.getSelectedItem();
 		
-		// If the dropdown had no services, service will be null
-		if (service == null) return;
+		// If the dropdown had no categories, category will be null
+		if (category == null) return;
 		
 		// Create an account window
-		new CreateAccountWindow(this, service);
+		new CreateAccountWindow(this, category);
 	}
 	
 	/**
-	 * Attempt to create a new service
+	 * Attempt to create a new category
 	 */
-	private void createService () {
-		// Finish if either services cannot be edited or if the service name isn't valid
-		if (!checkCanEditServices() || !checkCreateServiceNameIsValid()) return;
+	private void createCategory () {
+		// Finish if either categories cannot be edited or if the category name isn't valid
+		if (!checkCanEditCategories() || !checkCreateCategoryNameIsValid()) return;
 		
-		// Show a "create new service" chooser
+		// Show a "create new category" chooser
 		int index = GUIUtils.showOptionChooser(
 			this,
-			"Are you sure you want to create a new service?\n" +
-			"Services cannot be renamed once created.\n" +
-			createServiceField.getText(),
-			"Create New Service?",
-			new String[] { "Create Service", "Cancel" },
+			"Are you sure you want to create a new category?\n" +
+			"Categories cannot be renamed once created.\n" +
+			createCategoryField.getText(),
+			"Create New Category?",
+			new String[] { "Create Category", "Cancel" },
 			0);
 		
-		// If "Create Service" wasn't chosen, finish
+		// If "Create Category" wasn't chosen, finish
 		if (index != 0) return;
 		
-		// Create a new service and add it to the SGL
-		sgl.serviceGroups.add(new ServiceGroup(createServiceField.getText()));
+		// Create a new category and add it to the CGL
+		cgl.categoryGroups.add(new CategoryGroup(createCategoryField.getText()));
 		
 		// Update the vault edited status
 		vaultEdited();
 	}
 	
-	private void deleteService () {
-		// If services cannot be edited right now, finish
-		if (!checkCanEditServices()) return;
+	private void deleteCategory () {
+		// If categories cannot be edited right now, finish
+		if (!checkCanEditCategories()) return;
 		
-		// Get the service
-		ServiceGroup service = (ServiceGroup)deleteServiceDropdown.getSelectedItem();
+		// Get the category
+		CategoryGroup category = (CategoryGroup)deleteCategoryDropdown.getSelectedItem();
 		
-		// If there are no services in the SGL, service will be null
-		if (service == null) return;
+		// If there are no categories in the CGL, category will be null
+		if (category == null) return;
 		
 		// Get the message to display in the chooser and the default index, based on whether or not
-		// the service has one or more connected accounts
+		// the category has one or more connected accounts
 		String message;
 		int defaultIndex;
-		if (service.accountGroups.size() == 0) {
+		if (category.accountGroups.size() == 0) {
 			// If there are no connected accounts, the default
 			// option is "Delete Permanently" because nothing
 			// too important is connected
 			message =
-				"Are you sure you want to delete this service?\n" +
-				service.name;
+				"Are you sure you want to delete this category?\n" +
+				category.name;
 			defaultIndex = 0;
 		} else {
 			// If there are 1 or more connected accounts, the
 			// default option is "Cancel" to be extra safe
 			message =
-				"Are you sure you want to delete this service, which\n" +
-				"has " + service.accountGroups.size() + " connected account(s)?\n" +
-				service.name;
+				"Are you sure you want to delete this category, which\n" +
+				"has " + category.accountGroups.size() + " connected account(s)?\n" +
+				category.name;
 			defaultIndex = 1;
 		}
 		
@@ -406,15 +406,15 @@ public class MainWindow extends JFrame {
 		int index = GUIUtils.showOptionChooser(
 			this,
 			message,
-			"Delete Service",
+			"Delete Category",
 			new String[] { "Delete Permanently", "Cancel" },
 			defaultIndex);
 		
 		// If "Delete Permanently" was not chosen, finish
 		if (index != 0) return;
 		
-		// Otherwise, remove the service from the SGL
-		sgl.serviceGroups.remove(service);
+		// Otherwise, remove the category from the CGL
+		cgl.categoryGroups.remove(category);
 		
 		// Update the vault edited status
 		vaultEdited();
@@ -426,7 +426,7 @@ public class MainWindow extends JFrame {
 			this,
 			"Are you sure you want to print all account information,\n" +
 			"including passwords, usernames, and email addresses, for\n" +
-			"for all accounts in every service?",
+			"for all accounts in every category?",
 			"Print All Account Info?",
 			new String[] { "Print All Info", "Cancel" },
 			1);
@@ -434,29 +434,29 @@ public class MainWindow extends JFrame {
 		// If "Print All Info" was not selected, finish
 		if (index != 0) return;
 		
-		// Attempt to print the SGL
+		// Attempt to print the CGL
 		try {
-			SGLPrinter.printSGL(sgl);
+			CGLPrinter.printCGL(cgl);
 		} catch (Exception e) {
 			GUIUtils.showWarning(e);
 		}
 	}
 	
-	private boolean checkCanEditServices () {
-		// If there is no account window, services may be edited
+	private boolean checkCanEditCategories () {
+		// If there is no account window, categories may be edited
 		if (accountWindow == null) return true;
 		
 		// Otherwise, show a warning
-		GUIUtils.showWarning("You cannot edit services while editing an account.");
+		GUIUtils.showWarning("You cannot edit categories while editing an account.");
 		return false;
 	}
 	
-	private boolean checkCreateServiceNameIsValid () {
-		// If the create service field's value isn't blank, it is valid
-		if (!createServiceField.getText().isBlank()) return true;
+	private boolean checkCreateCategoryNameIsValid () {
+		// If the create category field's value isn't blank, it is valid
+		if (!createCategoryField.getText().isBlank()) return true;
 		
 		// Otherwise, show a warning
-		GUIUtils.showWarning("The name of the new service cannot be blank.");
+		GUIUtils.showWarning("The name of the new category cannot be blank.");
 		return false;
 	}
 	

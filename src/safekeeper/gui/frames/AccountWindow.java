@@ -31,13 +31,13 @@ public abstract class AccountWindow extends JDialog {
 	private final MainWindow mainWindow;
 	protected JDialog lastPasswordWindow;
 	
-	protected JTextField usernameField, emailField;
-	protected JTextArea notesField;
-	protected PasswordField passwordField;
+	private JTextField companyField, usernameField, emailField;
+	private JTextArea notesField;
+	private PasswordField passwordField;
 	private DragHiddenTextField dragAndDrop;
 	private PasswordGeneratorPanel passwordGeneratorPanel;
 	
-	protected boolean usernameEdited, emailEdited, notesEdited, passwordEdited;
+	protected boolean companyEdited, usernameEdited, emailEdited, notesEdited, passwordEdited;
 	
 	private final Color editedColor; // The background color a field turns when edited
 	
@@ -88,22 +88,28 @@ public abstract class AccountWindow extends JDialog {
 		MatchedPairsLayout layout = new MatchedPairsLayout(panel);
 		panel.setLayout(layout);
 		
+		// Company field and label
+		companyField = GUIUtils.makeTextField(accountGroup.company, true);
+		layout.addMatch(
+			GUIUtils.makeLabel("Company", true),
+			companyField);
+		
 		// Username field and label
 		usernameField = GUIUtils.makeTextField(accountGroup.username, true);
 		layout.addMatch(
-				GUIUtils.makeLabel("Username", true),
-				usernameField);
+			GUIUtils.makeLabel("Username", true),
+			usernameField);
 		
 		// Email field and label
 		emailField = GUIUtils.makeTextField(accountGroup.email, true);
 		layout.addMatch(
-				GUIUtils.makeLabel("Email Address", true),
-				emailField);
+			GUIUtils.makeLabel("Email Address", true),
+			emailField);
 		
 		// Password field and label
 		layout.addMatch(
-				GUIUtils.makeLabel("Password", true),
-				passwordField = new PasswordField(accountGroup.getPassword(), 1));
+			GUIUtils.makeLabel("Password", true),
+			passwordField = new PasswordField(accountGroup.getPassword(), 1));
 		
 		// Show last password button
 		if (accountGroup.getLastPassword() != null)
@@ -189,6 +195,7 @@ public abstract class AccountWindow extends JDialog {
 	}
 	
 	private void addEditingListeners () {
+		setDocListener(companyField.getDocument(), this::checkCompanyEdited);
 		setDocListener(usernameField.getDocument(), this::checkUsernameEdited);
 		setDocListener(emailField.getDocument(), this::checkEmailEdited);
 		setDocListener(notesField.getDocument(), this::checkNotesEdited);
@@ -214,6 +221,15 @@ public abstract class AccountWindow extends JDialog {
 	@FunctionalInterface
 	private static interface EditListener {
 		abstract void onFieldEdit ();
+	}
+	
+	protected final void checkCompanyEdited () {
+		// Update edited boolean
+		companyEdited = !companyField.getText().equals(accountGroup.company);
+		
+		// Update background color
+		if (companyEdited) companyField.setBackground(editedColor);
+		else companyField.setBackground(Color.WHITE);
 	}
 	
 	protected final void checkUsernameEdited () {
@@ -253,7 +269,7 @@ public abstract class AccountWindow extends JDialog {
 	}
 	
 	protected final boolean anyFieldEdited () {
-		return usernameEdited || emailEdited || notesEdited || passwordEdited;
+		return companyEdited || usernameEdited || emailEdited || notesEdited || passwordEdited;
 	}
 	
 	protected final void closeWindow () {
@@ -264,28 +280,44 @@ public abstract class AccountWindow extends JDialog {
 	
 	protected final void vaultEdited () {
 		// Update fields
+		checkCompanyEdited();
 		checkUsernameEdited();
 		checkEmailEdited();
 		checkNotesEdited();
 		checkPasswordEdited();
+		
 		dragAndDrop.setText(accountGroup.getPassword());
 		
 		// Update the vault edited status in the main window
 		mainWindow.vaultEdited();
 	}
 	
-	protected static final boolean validateUsernameAndPassword (String username, String password) {
-		boolean unameInvalid = username.isBlank(), pwordInvalid = password.isEmpty();
-		if (unameInvalid && pwordInvalid) {
-			GUIUtils.showWarning("Username and password fields cannot be blank.");
-			return false;
-		} else if (unameInvalid) {
+	protected final boolean validateFields () {
+		// Determine which fields are invalid
+		final boolean
+			comInvalid = companyField.getText().isBlank(),
+			unameInvalid = usernameField.getText().isBlank(),
+			pwordInvalid = passwordField.getPassword().isEmpty();
+		
+		// Show a warning for one of the invalid fields
+		if (comInvalid)
+			GUIUtils.showWarning("Company field cannot be blank.");
+		else if (unameInvalid)
 			GUIUtils.showWarning("Username field cannot be blank.");
-			return false;
-		} else if (pwordInvalid) {
+		else if (pwordInvalid)
 			GUIUtils.showWarning("Password field cannot be blank.");
-			return false;
-		} return true;
+		
+		// Return false if any field is invalid, true if all are valid
+		return !(comInvalid || unameInvalid || pwordInvalid);
+	}
+	
+	protected final void saveAllFieldDataToAccount () {
+		accountGroup.company = companyField.getText();
+		accountGroup.username = usernameField.getText();
+		if (passwordEdited) // .setPassword has side effects, only use when necessary
+			accountGroup.setPassword(passwordField.getPassword());
+		accountGroup.email = emailField.getText();
+		accountGroup.notes = notesField.getText();
 	}
 	
 	protected abstract JPanel createButtonPanel();

@@ -18,7 +18,7 @@ public class DisplayAccountWindow extends AccountWindow {
 	}
 	
 	private void updateTitle () {
-		setTitle("Account: " + accountGroup.username + " (" + accountGroup.service.name + ")");
+		setTitle("Account: " + accountGroup.getDisplayName());
 	}
 	
 	@Override
@@ -38,10 +38,11 @@ public class DisplayAccountWindow extends AccountWindow {
 		}
 		
 		// If the username and/or password are not valid, display a warning and do nothing else
-		if (!validateUsernameAndPassword(usernameField.getText(), passwordField.getPassword())) return;
+		if (!validateFields()) return;
 		
 		// Make a string describing which fields have been edited
 		String editedString = 
+			(companyEdited	? "\n- Company" : "") +
 			(usernameEdited	? "\n- Username" : "") +
 			(emailEdited	? "\n- Email" : "") +
 			(passwordEdited	? "\n- Password" : "") +
@@ -59,11 +60,7 @@ public class DisplayAccountWindow extends AccountWindow {
 		if (index != 0) return;
 		
 		// Otherwise, update values
-		accountGroup.username = usernameField.getText();
-		if (passwordEdited) // .setPassword has side effects, only use when necessary
-			accountGroup.setPassword(passwordField.getPassword());
-		accountGroup.email = emailField.getText();
-		accountGroup.notes = notesField.getText();
+		saveAllFieldDataToAccount();
 		
 		// Update the title and update the vault edited status
 		updateTitle();
@@ -99,8 +96,8 @@ public class DisplayAccountWindow extends AccountWindow {
 		// If "Delete Permanently" was not selected, do nothing
 		if (index != 0) return;
 		
-		// Otherwise, remove the account group from the service group
-		accountGroup.service.accountGroups.remove(accountGroup);
+		// Otherwise, remove the account group from the category group
+		accountGroup.category.accountGroups.remove(accountGroup);
 		
 		// Close the window and update the vault edited status
 		vaultEdited();
