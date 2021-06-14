@@ -55,7 +55,7 @@ public class MainWindow extends JFrame {
 	private class CategoryTreeRootNode extends DefaultMutableTreeNode {
 		
 		private CategoryTreeRootNode (CategoryGroupList cgl) {
-			super("Category");
+			super("Categories");
 			
 			// Gets categories in alphabetical order
 			Object[] categories = cgl.getCategoriesAlphabetical();
