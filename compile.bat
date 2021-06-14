@@ -1,5 +1,6 @@
 @echo off
 
+
 rem Removing compiled directory
 echo Removing compiled directory
 rmdir /s compiled\
@@ -31,6 +32,11 @@ cd ..\
 rem Copying resources
 echo Copying resources
 xcopy /E ..\src\resources\ Safekeeper\resources\
+
+
+rem Returning to main directory
+echo Returning to main directory
+cd ..
 
 
 pause
