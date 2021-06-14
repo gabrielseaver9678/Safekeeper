@@ -299,7 +299,7 @@ public abstract class AccountWindow extends JDialog {
 		accountGroup.username = usernameField.getText();
 		if (passwordEdited) // .setPassword has side effects, only use when necessary
 			accountGroup.setPassword(passwordField.getPassword());
-		accountGroup.notes = notesField.getText();
+		accountGroup.notes = notesField.getText().strip();
 	}
 	
 	protected abstract JPanel createButtonPanel();
