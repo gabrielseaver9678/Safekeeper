@@ -44,7 +44,6 @@ public class DisplayAccountWindow extends AccountWindow {
 		String editedString = 
 			(companyEdited	? "\n- Company" : "") +
 			(usernameEdited	? "\n- Username" : "") +
-			(emailEdited	? "\n- Email" : "") +
 			(passwordEdited	? "\n- Password" : "") +
 			(notesEdited	? "\n- Notes" : "");
 		

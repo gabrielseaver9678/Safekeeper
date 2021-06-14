@@ -31,13 +31,13 @@ public abstract class AccountWindow extends JDialog {
 	private final MainWindow mainWindow;
 	protected JDialog lastPasswordWindow;
 	
-	private JTextField companyField, usernameField, emailField;
+	private JTextField companyField, usernameField;
 	private JTextArea notesField;
 	private PasswordField passwordField;
 	private DragHiddenTextField dragAndDrop;
 	private PasswordGeneratorPanel passwordGeneratorPanel;
 	
-	protected boolean companyEdited, usernameEdited, emailEdited, notesEdited, passwordEdited;
+	protected boolean companyEdited, usernameEdited, notesEdited, passwordEdited;
 	
 	private final Color editedColor; // The background color a field turns when edited
 	
@@ -99,12 +99,6 @@ public abstract class AccountWindow extends JDialog {
 		layout.addMatch(
 			GUIUtils.makeLabel("Username", true),
 			usernameField);
-		
-		// Email field and label
-		emailField = GUIUtils.makeTextField(accountGroup.email, true);
-		layout.addMatch(
-			GUIUtils.makeLabel("Email Address", true),
-			emailField);
 		
 		// Password field and label
 		layout.addMatch(
@@ -197,7 +191,6 @@ public abstract class AccountWindow extends JDialog {
 	private void addEditingListeners () {
 		setDocListener(companyField.getDocument(), this::checkCompanyEdited);
 		setDocListener(usernameField.getDocument(), this::checkUsernameEdited);
-		setDocListener(emailField.getDocument(), this::checkEmailEdited);
 		setDocListener(notesField.getDocument(), this::checkNotesEdited);
 		setDocListener(passwordField.getDocument(), this::checkPasswordEdited);
 	}
@@ -241,15 +234,6 @@ public abstract class AccountWindow extends JDialog {
 		else usernameField.setBackground(Color.WHITE);
 	}
 	
-	protected final void checkEmailEdited () {
-		// Update edited boolean
-		emailEdited = !emailField.getText().equals(accountGroup.email);
-		
-		// Update background color
-		if (emailEdited) emailField.setBackground(editedColor);
-		else emailField.setBackground(Color.WHITE);
-	}
-	
 	protected final void checkNotesEdited () {
 		// Update edited boolean
 		notesEdited = !notesField.getText().equals(accountGroup.notes);
@@ -269,7 +253,7 @@ public abstract class AccountWindow extends JDialog {
 	}
 	
 	protected final boolean anyFieldEdited () {
-		return companyEdited || usernameEdited || emailEdited || notesEdited || passwordEdited;
+		return companyEdited || usernameEdited || notesEdited || passwordEdited;
 	}
 	
 	protected final void closeWindow () {
@@ -282,7 +266,6 @@ public abstract class AccountWindow extends JDialog {
 		// Update fields
 		checkCompanyEdited();
 		checkUsernameEdited();
-		checkEmailEdited();
 		checkNotesEdited();
 		checkPasswordEdited();
 		
@@ -316,7 +299,6 @@ public abstract class AccountWindow extends JDialog {
 		accountGroup.username = usernameField.getText();
 		if (passwordEdited) // .setPassword has side effects, only use when necessary
 			accountGroup.setPassword(passwordField.getPassword());
-		accountGroup.email = emailField.getText();
 		accountGroup.notes = notesField.getText();
 	}
 	

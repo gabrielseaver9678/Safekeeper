@@ -64,11 +64,9 @@ public class CGLPrinter {
 	}
 	
 	private static String getTextToPrint (AccountGroup account) {
-		String text = "  " + account.getDisplayName() + "\n";
-		// If the email isn't blank, add it as a line
-		if (!account.email.isBlank())
-			text += "    Email:    " + account.email + "\n";
-			text += "    Password: " + account.getPassword() + "\n";
+		String text = "  " + account.company + "\n";
+		text += "    Username: " + account.username + "\n";
+		text += "    Password: " + account.getPassword() + "\n";
 		return text;
 	}
 	

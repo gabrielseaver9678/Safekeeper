@@ -10,20 +10,19 @@ public class AccountGroup implements Serializable {
 	
 	private static final long serialVersionUID = 1L;
 	
-	public String username, email, notes, company;
+	public String company, username, notes;
 	private String password, lastPassword;
 	private Date passwordLastChangedDate;
 	
 	public CategoryGroup category;
 	
 	public AccountGroup (CategoryGroup category) {
-		this("", "", "", "", null, category);
+		this("", "", "", null, category);
 	}
 	
-	public AccountGroup (String company, String username, String email, String notes, String password, CategoryGroup category) {
+	public AccountGroup (String company, String username, String notes, String password, CategoryGroup category) {
 		this.company = company;
 		this.username = username;
-		this.email = email;
 		this.notes = notes;
 		this.password = password;
 		this.category = category;

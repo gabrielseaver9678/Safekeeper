@@ -1,8 +1,7 @@
 BUGS
-- Show Last Password button appears even if the account was just made
+[None]
 
 FEATURES
-- Make Crypto use several lines and pass in an OutputStream for decryption and encryption
 - Find a better way to display the information regarding setting a master password
 - Google Drive API with google sign-in for oauth
 - Update manager

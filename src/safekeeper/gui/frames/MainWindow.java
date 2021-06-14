@@ -424,8 +424,7 @@ public class MainWindow extends JFrame {
 		// Show the print chooser
 		int index = GUIUtils.showOptionChooser(
 			this,
-			"Are you sure you want to print all account information,\n" +
-			"including passwords, usernames, and email addresses, for\n" +
+			"Are you sure you want to print account information for\n" +
 			"for all accounts in every category?",
 			"Print All Account Info?",
 			new String[] { "Print All Info", "Cancel" },
