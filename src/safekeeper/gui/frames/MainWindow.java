@@ -120,7 +120,7 @@ public class MainWindow extends JFrame {
 		categoryScrollPane.setBorder(GUIUtils.createMarginBorder(GUIUtils.MARGIN));
 		categoryScrollPane.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_ALWAYS);
 		categoryScrollPane.setHorizontalScrollBarPolicy(JScrollPane.HORIZONTAL_SCROLLBAR_NEVER);
-		GUIUtils.setSize(categoryScrollPane, 300, 300);
+		GUIUtils.setSize(categoryScrollPane, 400, 400);
 		
 		// Initialize the category tree
 		initializeCategoryTree(categoryScrollPane);
