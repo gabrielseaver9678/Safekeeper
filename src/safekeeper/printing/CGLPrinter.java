@@ -74,7 +74,7 @@ public class CGLPrinter {
 	
 	private static final int
 		SPACES_PER_INDENT = 3,
-		MAX_CHARS_IN_LINE = 50;
+		MAX_CHARS_IN_LINE = 60;
 	
 	private static String indent (int indents, String text) {
 		// Get the indent space
