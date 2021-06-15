@@ -43,7 +43,9 @@ public class GUIUtils {
 		
 		fontButton = new Font(Font.MONOSPACED, Font.PLAIN, 11),
 		
-		fontPrinter = new Font(Font.MONOSPACED, Font.PLAIN, 14),
+		fontPrinter = makeFont(
+			"JetBrainsMono/JetBrainsMono-Regular.ttf", 14,
+			new Font(Font.MONOSPACED, Font.PLAIN, 14)),
 		
 		fontPassword = makeFont(
 			"JetBrainsMono/JetBrainsMono-Regular.ttf", 13,
