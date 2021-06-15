@@ -95,7 +95,7 @@ public class VaultFileSelector {
 			"characters, including symbols, numbers, and letters. Your master\n" +
 			"password should not include any words or names. It is recommended\n" +
 			"that you write it down in a safe location, because if it is lost,\n" +
-			"it will be impossible to open your password vault.", false);
+			"it will be impossible to open your password vault.");
 		
 		explanationLabel.setBorder(GUIUtils.createMarginBorder(GUIUtils.MARGIN));
 		panel.add(explanationLabel, BorderLayout.NORTH);
@@ -155,13 +155,13 @@ public class VaultFileSelector {
 			// Master password field and label
 			passwordField = new PasswordField(1);
 			layout.addMatch(
-				GUIUtils.makeLabel("New Master Password", true),
+				GUIUtils.makeLabel("New Master Password"),
 				passwordField);
 			
 			// Password re-entry field and label
 			passwordReentryField = new PasswordField(1);
 			layout.addMatch(
-				GUIUtils.makeLabel("Password Re-Entry", true),
+				GUIUtils.makeLabel("Password Re-Entry"),
 				passwordReentryField);
 			
 			// Whenever the master password field is edited, update the field backgrounds
@@ -184,7 +184,7 @@ public class VaultFileSelector {
 			
 			// Submit button
 			layout.addMatch(
-				GUIUtils.makeLabel("", false),
+				GUIUtils.makeLabel(),
 				GUIUtils.makeStretchPanel(GUIUtils.makeButton("Submit", e -> onPasswordSubmit())));
 			
 			// Finalize layout

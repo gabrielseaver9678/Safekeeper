@@ -59,7 +59,7 @@ public class PasswordGeneratorPanel extends JPanel {
 		lengthField.addChangeListener(e -> generatePassword());
 		
 		// Security label
-		securityLabel = GUIUtils.makeLabel("", false);
+		securityLabel = GUIUtils.makeLabel();
 		
 		// Initialize rows
 		rowsLayout.addRow(new JComponent[] { lowercase, uppercase, numbers, symbols });

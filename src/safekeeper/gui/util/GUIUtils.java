@@ -14,6 +14,8 @@ import java.awt.Window;
 import java.awt.event.ActionListener;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
+import java.io.File;
+import java.io.FileInputStream;
 
 import javax.swing.BorderFactory;
 import javax.swing.Box;
@@ -30,16 +32,34 @@ import javax.swing.border.Border;
 
 public class GUIUtils {
 	
-	public static final Font
-		font = new Font(Font.DIALOG, Font.PLAIN, 13),
-		fontSmall = new Font(Font.DIALOG, Font.PLAIN, 11),
-		fontPassword = new Font(Font.MONOSPACED, Font.PLAIN, 11),
-		fontButton = fontPassword,
-		fontPrinter = new Font(Font.MONOSPACED, Font.PLAIN, 14);
-	
 	public static final ImageIcon lockIcon = new ImageIcon("resources/lock-icon.png");
 	
 	public static final int MARGIN = 10;
+	
+	public static final Font
+		font = makeFont(
+			"Alata/alata-regular.ttf", 12,
+			new Font(Font.DIALOG, Font.PLAIN, 12)),
+		
+		fontButton = new Font(Font.MONOSPACED, Font.PLAIN, 11),
+		
+		fontPrinter = new Font(Font.MONOSPACED, Font.PLAIN, 14),
+		
+		fontPassword = makeFont(
+			"JetBrainsMono/JetBrainsMono-Regular.ttf", 13,
+			new Font(Font.MONOSPACED, Font.PLAIN, 13));
+	
+	private static Font makeFont (String fontResource, int size, Font backupFont) {
+		try {
+			return Font.createFont(Font.TRUETYPE_FONT, new FileInputStream(
+				getResource(fontResource))).deriveFont((float)size);
+		} catch (Exception e) { return backupFont; }
+	}
+	
+	private static File getResource (String resourcesDirPath) {
+		try { return new File(ClassLoader.getSystemResource("resources/"+resourcesDirPath).toURI()); }
+		catch (Exception e) { return null; }
+	}
 	
 	public static void playErrorSound () {
 		Runnable sound = (Runnable)Toolkit.getDefaultToolkit().getDesktopProperty("win.sound.exclamation");
@@ -100,12 +120,16 @@ public class GUIUtils {
 		return BorderFactory.createEmptyBorder(margin, margin, margin, margin);
 	}
 	
-	public static JLabel makeLabel (String text, boolean useSmallFont) {
+	public static JLabel makeLabel (String text) {
 		if (text.contains("\n"))
 			text = "<html>" + text.replaceAll("\n", "<br />") + "</html>";
 		JLabel label = new JLabel(text);
-		label.setFont(useSmallFont ? fontSmall : font);
+		label.setFont(font);
 		return label;
+	}
+	
+	public static JLabel makeLabel () {
+		return makeLabel("");
 	}
 	
 	public static JButton makeButton (String text, ActionListener listener) {
@@ -116,14 +140,14 @@ public class GUIUtils {
 		return button;
 	}
 	
-	public static JTextField makeTextField (String text, boolean useSmallFont) {
+	public static JTextField makeTextField (String text) {
 		JTextField field = new JTextField(text, 1);
-		field.setFont(useSmallFont ? fontSmall : font);
+		field.setFont(font);
 		return field;
 	}
 	
-	public static JTextField makeTextField (boolean useSmallFont) {
-		return makeTextField("", useSmallFont);
+	public static JTextField makeTextField () {
+		return makeTextField("");
 	}
 	
 	public static Component makeVerticalStrut (int height) {

@@ -198,6 +198,7 @@ public class MainWindow extends JFrame {
 		// Initialize the tree
 		categoryTree = new JTree(model);
 		categoryTree.setFont(GUIUtils.font);
+		categoryTree.setRowHeight(20);
 		categoryTree.setOpaque(false);
 		categoryTree.setToggleClickCount(1);
 		categoryTree.addTreeWillExpandListener(new TreeWillExpandListener() {
@@ -284,7 +285,7 @@ public class MainWindow extends JFrame {
 		
 		// Create category
 		createCategoryButton = GUIUtils.makeButton("Create New Category", e -> createCategory());
-		createCategoryField = GUIUtils.makeTextField(true);
+		createCategoryField = GUIUtils.makeTextField();
 		createCategoryField.addActionListener(e -> createCategory());
 		
 		buttonPanel.add(makeButtonPanelRow(createCategoryButton, createCategoryField));

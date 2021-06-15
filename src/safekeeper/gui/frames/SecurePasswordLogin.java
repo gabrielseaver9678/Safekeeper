@@ -41,7 +41,7 @@ public class SecurePasswordLogin {
 		JPanel panel = new JPanel();
 		
 		// Field label
-		panel.add(GUIUtils.makeLabel("Enter your master password:", true));
+		panel.add(GUIUtils.makeLabel("Enter your master password:"));
 		
 		// Password field
 		passwordField = new PasswordField(25);

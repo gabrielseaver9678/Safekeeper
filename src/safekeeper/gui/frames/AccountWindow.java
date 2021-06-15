@@ -89,46 +89,46 @@ public abstract class AccountWindow extends JDialog {
 		panel.setLayout(layout);
 		
 		// Company field and label
-		companyField = GUIUtils.makeTextField(accountGroup.company, true);
+		companyField = GUIUtils.makeTextField(accountGroup.company);
 		layout.addMatch(
-			GUIUtils.makeLabel("Company", true),
+			GUIUtils.makeLabel("Company"),
 			companyField);
 		
 		// Username field and label
-		usernameField = GUIUtils.makeTextField(accountGroup.username, true);
+		usernameField = GUIUtils.makeTextField(accountGroup.username);
 		layout.addMatch(
-			GUIUtils.makeLabel("Username", true),
+			GUIUtils.makeLabel("Username"),
 			usernameField);
 		
 		// Password field and label
 		layout.addMatch(
-			GUIUtils.makeLabel("Password", true),
+			GUIUtils.makeLabel("Password"),
 			passwordField = new PasswordField(accountGroup.getPassword(), 1));
 		
 		// Show last password button
 		if (accountGroup.getLastPassword() != null)
 			layout.addMatch(
-				GUIUtils.makeLabel("", true),
+				GUIUtils.makeLabel(),
 				GUIUtils.makeStretchPanel(
 					GUIUtils.makeButton("Show Last Password", e -> makeLastPasswordDialog())));
 		
 		// Notes field and label
 		notesField = new JTextArea(4, 15);
 		notesField.setText(accountGroup.notes);
-		notesField.setFont(GUIUtils.fontSmall);
+		notesField.setFont(GUIUtils.font);
 		notesField.setLineWrap(true);
 		
 		JScrollPane notesScrollPane = new JScrollPane(notesField);
 		notesScrollPane.setBorder(this.usernameField.getBorder());
 		layout.addMatch(
-			GUIUtils.makeLabel("Notes", true),
+			GUIUtils.makeLabel("Notes"),
 			notesScrollPane);
 		
 		// Drag-and-drop (if showDragAndDrop is true)
 		dragAndDrop = new DragHiddenTextField(accountGroup.getPassword());
 		if (showDragAndDrop)
 			layout.addMatch(
-				GUIUtils.makeLabel("Password Drag-and-Drop", true),
+				GUIUtils.makeLabel("Copy Password"),
 				dragAndDrop);
 		
 		// Finalize layout
@@ -169,15 +169,14 @@ public abstract class AccountWindow extends JDialog {
 		PasswordField passwordField = new PasswordField(accountGroup.getLastPassword(), 30);
 		passwordField.setEditable(false);
 		layout.addMatch(
-			GUIUtils.makeLabel("Last Password", true),
+			GUIUtils.makeLabel("Last Password"),
 			passwordField);
 		
 		// Last change date viewer and label
 		layout.addMatch(
-			GUIUtils.makeLabel("Last Change", true),
+			GUIUtils.makeLabel("Last Change"),
 			GUIUtils.makeLabel(
-				new SimpleDateFormat("MMM d, yyyy (h:mm a)").format(accountGroup.getPasswordLastChangedDate()),
-				true));
+				new SimpleDateFormat("MMM d, yyyy (h:mm a)").format(accountGroup.getPasswordLastChangedDate())));
 		
 		// Finalize layout and dialog
 		layout.setAutoCreateGaps(true);
