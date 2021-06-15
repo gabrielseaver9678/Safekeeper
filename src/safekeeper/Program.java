@@ -30,7 +30,7 @@ public class Program {
 	
 	public Program (String[] cmdArgs) {
 		GUIUtils.setWindowsStyle();
-		mainWindow = new MainWindow(this::saveCGLSafely);
+		mainWindow = new MainWindow(this::saveCGLSafely, this::setNewMasterPassword);
 		loadAndLogin(cmdArgs);
 	}
 	
@@ -168,6 +168,18 @@ public class Program {
 		} else {
 			GUIUtils.showFatalError("The selected vault file does not exist.");
 		}
+	}
+	
+	private void setNewMasterPassword () {
+		// Get a new master password
+		String newPassword = VaultFileSelector.makeNewMasterPassword(mainWindow);
+		
+		// If the user has not properly set it, do nothing
+		if (newPassword == null) return;
+		
+		// Set the password and set the vault edited status
+		password = newPassword;
+		mainWindow.vaultEdited();
 	}
 	
 }

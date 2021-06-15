@@ -10,9 +10,6 @@ import javax.swing.JButton;
 import javax.swing.JComboBox;
 import javax.swing.JComponent;
 import javax.swing.JFrame;
-import javax.swing.JMenu;
-import javax.swing.JMenuBar;
-import javax.swing.JMenuItem;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JTextField;
@@ -35,14 +32,16 @@ public class MainWindow extends JFrame {
 	AccountWindow accountWindow = null;
 	
 	private CategoryGroupList cgl;
+	
 	private SaveFunction saveFunction;
+	private Runnable setNewMasterPassword;
 	
 	private boolean vaultHasBeenEdited = false;
 	
 	private JPanel buttonPanel;
 	private JTree categoryTree;
 	
-	private JButton createAccountButton, createCategoryButton, deleteCategoryButton, printAllButton;
+	private JButton createAccountButton, createCategoryButton, deleteCategoryButton, printAllButton, newPasswordButton;
 	private JComboBox<CategoryGroup> createAccountDropdown, deleteCategoryDropdown;
 	private JTextField createCategoryField;
 	
@@ -105,15 +104,16 @@ public class MainWindow extends JFrame {
 		
 	}
 	
-	public MainWindow (SaveFunction saveFunction) {
+	public MainWindow (SaveFunction saveFunction, Runnable setNewMasterPassword) {
 		super("Safekeeper");
 		
 		// On closing
 		setDefaultCloseOperation(JFrame.DO_NOTHING_ON_CLOSE);
 		GUIUtils.stylizeWindow(this, null, this::onClosing);
 		
-		// Set save function
+		// Set save function along with new master password functionality
 		this.saveFunction = saveFunction;
+		this.setNewMasterPassword = setNewMasterPassword;
 		
 		// Create the scroll pane
 		JScrollPane categoryScrollPane = new JScrollPane();
@@ -125,8 +125,7 @@ public class MainWindow extends JFrame {
 		// Initialize the category tree
 		initializeCategoryTree(categoryScrollPane);
 		
-		// Create the menu bar and button panel
-		createMenuBar();
+		// Create the button panel
 		createButtonPanel();
 		
 		// Add the panels and finalize
@@ -186,6 +185,7 @@ public class MainWindow extends JFrame {
 		deleteCategoryButton.setEnabled(enabled);
 		deleteCategoryDropdown.setEnabled(enabled);
 		printAllButton.setEnabled(enabled);
+		newPasswordButton.setEnabled(enabled);
 	}
 	
 	private void initializeCategoryTree (JScrollPane categoryTreeParentPane) {
@@ -252,24 +252,7 @@ public class MainWindow extends JFrame {
 		} else System.exit(0); // Otherwise, exit immediately
 	}
 	
-	private void createMenuBar() {
-		// Create the menu bar
-		JMenuBar menuBar = new JMenuBar();
-		
-		// Help menu
-		JMenu helpMenu = new JMenu("Help");
-		menuBar.add(helpMenu);
-		helpMenu.add(new JMenuItem("Show User Guide"));
-		
-		// Edit menu
-		JMenu editMenu = new JMenu("Edit");
-		menuBar.add(editMenu);
-		
-		// Finalize menu bar
-		setJMenuBar(menuBar);
-	}
-	
-	private void createButtonPanel() {
+	private void createButtonPanel () {
 		// Initialize button panel and layout
 		buttonPanel = new JPanel();
 		buttonPanel.setLayout(new BoxLayout(buttonPanel, BoxLayout.Y_AXIS));
@@ -301,7 +284,13 @@ public class MainWindow extends JFrame {
 		
 		// Print all
 		printAllButton = GUIUtils.makeButton("Print All Account Information", e -> printAllAccountInfo());
+		
 		buttonPanel.add(GUIUtils.makeStretchPanel(printAllButton));
+		addButtonPanelStrut();
+		
+		// Set new master password
+		newPasswordButton = GUIUtils.makeButton("Change Master Password", e -> new Thread(setNewMasterPassword).start());
+		buttonPanel.add(GUIUtils.makeStretchPanel(newPasswordButton));
 		
 		// Disable UI elements
 		setUIEnabled(false);
