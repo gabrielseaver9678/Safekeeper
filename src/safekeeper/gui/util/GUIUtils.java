@@ -16,6 +16,7 @@ import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.InputStream;
 
 import javax.swing.BorderFactory;
 import javax.swing.Box;
@@ -29,6 +30,8 @@ import javax.swing.JPanel;
 import javax.swing.JTextField;
 import javax.swing.UIManager;
 import javax.swing.border.Border;
+
+import safekeeper.Entry;
 
 public class GUIUtils {
 	
@@ -51,14 +54,16 @@ public class GUIUtils {
 	
 	private static Font makeFont (String fontResource, int size, Font backupFont) {
 		try {
-			return Font.createFont(Font.TRUETYPE_FONT, new FileInputStream(
-				getResource(fontResource))).deriveFont((float)size);
+			File resource = getResource(fontResource);
+			return Font.createFont(Font.TRUETYPE_FONT, new FileInputStream(resource)).deriveFont((float)size);
 		} catch (Exception e) { return backupFont; }
 	}
 	
-	private static File getResource (String resourcesDirPath) {
-		try { return new File(ClassLoader.getSystemResource("resources/"+resourcesDirPath).toURI()); }
-		catch (Exception e) { return null; }
+	private static File getResource (String resourcesDirPath) throws Exception {
+		// Gets the jar file and the resource directory
+		File jarFile = new File(GUIUtils.class.getProtectionDomain().getCodeSource().getLocation().toURI());
+		String resourceDir = jarFile.getParentFile().getAbsolutePath() + "/resources/";
+		return new File(resourceDir + resourcesDirPath);
 	}
 	
 	public static void playErrorSound () {
