@@ -13,6 +13,8 @@ import javax.swing.JFileChooser;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
+import javax.swing.JScrollPane;
+import javax.swing.JTextArea;
 import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
 import javax.swing.filechooser.FileNameExtensionFilter;
@@ -89,16 +91,32 @@ public class VaultFileSelector {
 		JPanel panel = new JPanel(new BorderLayout());
 		
 		// Explanation label
-		JLabel explanationLabel = GUIUtils.makeLabel(
-			"Your master password will be used to log into your password vault,\n" +
-			"so it is vital that it is very secure. Please use at least 15\n" +
-			"characters, including symbols, numbers, and letters. Your master\n" +
-			"password should not include any words or names. It is recommended\n" +
-			"that you write it down in a safe location, because if it is lost,\n" +
-			"it will be impossible to open your password vault.");
+		JTextArea explanationLabel = new JTextArea(
+			"Your master password will be used to log into your password vault, " +
+			"so it is vital that it is very secure. Please use at least 15 " +
+			"characters, including symbols, numbers, and letters. Your master " +
+			"password should not include any words or names. It is recommended " +
+			"that you write it down in a safe location, because if it is lost, " +
+			"it will be impossible to open your password vault.", 6, 1);
 		
-		explanationLabel.setBorder(GUIUtils.createMarginBorder(GUIUtils.MARGIN));
-		panel.add(explanationLabel, BorderLayout.NORTH);
+		// Add margin border and set font
+		explanationLabel.setFont(GUIUtils.font);
+		
+		// Line wrapping
+		explanationLabel.setWrapStyleWord(true);
+		explanationLabel.setLineWrap(true);
+		
+		// Not editable and transparent background
+		explanationLabel.setEditable(false);
+		explanationLabel.setOpaque(false);
+		
+		// Scroll pane
+		JScrollPane explanScrollPane = new JScrollPane(explanationLabel);
+		explanScrollPane.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_NEVER);
+		explanScrollPane.setHorizontalScrollBarPolicy(JScrollPane.HORIZONTAL_SCROLLBAR_NEVER);
+		explanScrollPane.setBorder(GUIUtils.createMarginBorder(GUIUtils.MARGIN));
+		
+		panel.add(explanScrollPane, BorderLayout.NORTH);
 		
 		// Password panel
 		MasterPasswordPanel passwordPanel = new MasterPasswordPanel(parentFrame, latch);
